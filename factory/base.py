@@ -2,7 +2,8 @@
 All base factory classes.
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
+
 
 import six
 import abc
