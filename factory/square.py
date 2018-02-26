@@ -79,8 +79,10 @@ class Square(base.TessellationFactory):
 
         # build bbox from NE,SW corners
         bbox = shapely.geometry.box(SW[0], SW[1], NE[0], NE[1], ccw=True)
-
-        return bbox
+        poly_df = gpd.GeoDataFrame(geometry=[bbox])
+        print(type(poly_df))
+        poly_df.crs = {'init': 'epsg:' + constants.universal_crs, 'units': 'm'}
+        return poly_df
 
     def build_tessellation(self):
 
