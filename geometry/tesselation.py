@@ -9,6 +9,7 @@ from ..utils import constants
 import geopandas as gpd
 import sys
 
+
 class Tessellation:
 
     def __init__(self, factory=None, **kwargs):
@@ -30,13 +31,15 @@ class Tessellation:
         self.__factory = factory
         self.__properties = factory.set_properties()
 
-        self.logger.info("Start creating tessellation (" + self.__properties['id'] + ")")
+        self.logger.info("Start creating tessellation (" +
+                         self.__properties['id'] + ")")
         start = time.time()
 
         self.__tessellation, self.__area = factory.build_tessellation()
 
         end = time.time()
-        self.logger.info("End creating grid (" + self.__properties['id'] + ") in " + str(end - start))
+        self.logger.info(
+            "End creating grid (" + self.__properties['id'] + ") in " + str(end - start))
 
     def write(self, outputfile):
         """
@@ -50,7 +53,6 @@ class Tessellation:
     def tessellation(self):
         return self.__tessellation
 
-
     @property
     def area(self):
         return self.__area
@@ -59,5 +61,4 @@ class Tessellation:
     def id(self):
         if 'id' in self.__properties:
             return self.__properties['id']
-
         return None
