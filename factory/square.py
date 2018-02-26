@@ -9,8 +9,10 @@ from ..factory import base
 from ..utils import constants, utils
 import math
 import re
-from shapely.geometry import Polygon
+import shapely
 import logging
+import os
+import geopandas
 
 
 class Square(base.TessellationFactory):
@@ -19,7 +21,7 @@ class Square(base.TessellationFactory):
     """
 
     def __init__(self, meters=50, crs=constants.default_crs,
-                 area=None, area_name=None, which_result=None, logger=None):
+                 area=None, area_name=None, which_result=None, logger=None, extension="boundary"):
         """__init__ method to instantiate variables.
 
         Args:
@@ -40,6 +42,7 @@ class Square(base.TessellationFactory):
         self.__which_result = which_result
         self.__meters = meters
         self.__crs = crs
+        self.__extension = extension
 
     def set_properties(self):
 
@@ -54,8 +57,30 @@ class Square(base.TessellationFactory):
 
         return prop
 
+    # TODO broken
     def get_properties(self):
         return self.__prop
+
+    def build_bbox(self, area, bbox_side_len=500):
+        """
+
+        :param area: area whose centroid is used as a starting point for building the tessellation
+        :param bbox_side_len: length of the bbox rectangle. Defaults to 500 meters.
+
+        """
+
+       # get area centroid
+        centroid = area.centroid[0].coords[0]
+
+        # get North-East corner
+        NE = [float(coord)+bbox_side_len for coord in centroid]
+        # get South-West corner
+        SW = [float(coord)-bbox_side_len for coord in centroid]
+
+        # build bbox from NE,SW corners
+        bbox = shapely.geometry.box(SW[0], SW[1], NE[0], NE[1], ccw=True)
+
+        return bbox
 
     def build_tessellation(self):
 
@@ -67,11 +92,17 @@ class Square(base.TessellationFactory):
             area = utils.get_area_boundary(
                 self.__area_name, self.__which_result)
 
+        # Re-project data
         self.logger.debug("Convert area to crs epsg:" +
                           constants.universal_crs + ".")
         # We work with the universal crs epsg:3857
         area = area.to_crs(
             {'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
+
+        # Compute Bounding Box if requested
+        if self.__extension == 'bbox':
+            # TODO ugly owerwriting. To be refactored.
+            area = self.build_bbox(area)
 
         self.logger.debug("Defining boundaries.")
         # Obtain the boundaries of the geometry
@@ -107,7 +138,8 @@ class Square(base.TessellationFactory):
                 polygon_desc = {}
 
                 # Create shape (polygon)
-                p = Polygon([(x1, y1), (x1, y2), (x2, y2), (x2, y1)])
+                p = shapely.geometry.Polygon(
+                    [(x1, y1), (x1, y2), (x2, y2), (x2, y1)])
 
                 # Compute intersection between boros and the current cell and check if it's true
                 # ALTERNATIVELY COMPUTE CENTROID AND THEN THE INTERSECTION WITH

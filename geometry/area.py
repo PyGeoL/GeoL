@@ -5,7 +5,7 @@ Class to deal with land use dataset provided by UrbanAtlas (https://land.coperni
 # Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
 
 from geol.utils import constants, utils
-from geol.geometry.grid import Square
+from ..factory import Square
 import geopandas as gpd
 from ..datasets import landuse as lu
 
