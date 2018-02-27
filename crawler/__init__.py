@@ -1,1 +1,0 @@
-from .foursquare_crawler import Foursquare
