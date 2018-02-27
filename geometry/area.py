@@ -2,7 +2,7 @@
 Class to deal with land use dataset provided by UrbanAtlas (https://land.copernicus.eu/local/urban-atlas/urban-atlas-2012/)
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
 
 from geol.utils import constants, utils
 from ..factory import Square

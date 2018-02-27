@@ -2,7 +2,7 @@
 File description
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
 
 import geopandas as gpd
 from ..factory import base
@@ -10,9 +10,11 @@ from ..utils import constants, utils
 import math
 import re
 import shapely
-import logging
 import os
 import geopandas
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class Square(base.TessellationFactory):
@@ -33,10 +35,7 @@ class Square(base.TessellationFactory):
             crs: coordinate reference system of the output grid
         """
 
-        if logger is None:
-            logging.basicConfig(format='%(levelname)s: %(message)s')
-            self.logger = logging.getLogger(__name__)
-
+        self.logger = logging.getLogger(__name__)
         self.__area = area
         self.__area_name = area_name
         self.__which_result = which_result

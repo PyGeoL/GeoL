@@ -2,13 +2,16 @@
 File description
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
-
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
 import geopandas as gpd
 from ..factory import base
 from ..utils import constants
 import time
 import re
+
+import logging
+logger = logging.getLogger(__name__)
+
 
 class Custom(base.TessellationFactory):
 
@@ -17,21 +20,23 @@ class Custom(base.TessellationFactory):
         self.__input = input
         self.__crs = crs
         self.__area_name = area_name
+        self.logger = logger
 
     def build_tessellation(self):
-
         """
          TODO: il logger non funziona cosi'! Va settato che funzioni su multipli file.
          TODO: add the creation of the area building the bounding box that contains the tessellation.
          """
 
-        self.logger.info("Start loading tessellation (" + self.__properties['id'] + ")")
+        self.logger.info("Start loading tessellation (" +
+                         self.__properties['id'] + ")")
         start = time.time()
 
         tessellation = self.read(input)
 
         end = time.time()
-        self.logger.info("End loading grid (" + self.__properties['id'] + ") in " + str(end - start))
+        self.logger.info(
+            "End loading grid (" + self.__properties['id'] + ") in " + str(end - start))
 
         return tessellation, None
 
