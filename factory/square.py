@@ -167,5 +167,5 @@ class Square(base.TessellationFactory):
         gdf = gdf.to_crs({'init': self.__crs})
         gdf.sort_values(by=["id_x", "id_y"], ascending=True, inplace=True)
         gdf = gdf.reset_index().rename(columns={"index": "cellID"})
-
+        gdf.to_file(os.path.abspath('./boundary.shp'), driver='ESRI Shapefile')
         return gdf, area
