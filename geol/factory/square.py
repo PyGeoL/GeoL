@@ -35,7 +35,7 @@ class Square(base.TessellationFactory):
             crs: coordinate reference system of the output grid
         """
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
         self.__area = area
         self.__area_name = area_name
         self.__which_result = which_result
