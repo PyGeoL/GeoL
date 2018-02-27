@@ -4,11 +4,12 @@ File description
 
 # Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
 
-import logging
 import time
 from ..utils import constants
 import geopandas as gpd
 import sys
+import logging
+logger = logging.getLogger(__name__)
 
 
 class Tessellation:
@@ -27,7 +28,7 @@ class Tessellation:
 
         if self.logger is None:
             logging.basicConfig(format='%(levelname)s: %(message)s')
-            self.logger = logging.getLogger(__name__)
+            self.logger = logger
 
         self.__factory = factory
         self.__properties = factory.set_properties()
@@ -39,8 +40,7 @@ class Tessellation:
         self.__tessellation, self.__area = factory.build_tessellation()
 
         end = time.time()
-        self.logger.info(
-            "End creating grid (" + self.__properties['id'] + ") in " + str(end - start))
+        self.logger.info("End creating grid  in " + str(end - start))
 
     def write(self, outputfile):
         """

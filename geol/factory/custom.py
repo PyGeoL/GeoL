@@ -28,15 +28,13 @@ class Custom(base.TessellationFactory):
          TODO: add the creation of the area building the bounding box that contains the tessellation.
          """
 
-        self.logger.info("Start loading tessellation (" +
-                         self.__properties['id'] + ")")
+        self.logger.info("Start loading tessellation")
         start = time.time()
 
         tessellation = self.read(input)
 
         end = time.time()
-        self.logger.info(
-            "End loading grid (" + self.__properties['id'] + ") in " + str(end - start))
+        self.logger.info("End loading grid in " + str(end - start))
 
         return tessellation, None
 

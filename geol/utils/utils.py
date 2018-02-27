@@ -2,16 +2,11 @@
 Utilies for general purposes
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
+
 
 import osmnx
 from shapely.geometry import Point, Polygon
-import logging
-
-
-def log():
-    logging.basicConfig(format='%(levelname)s: %(message)s',
-                        level=logging.DEBUG)
 
 
 def get_area_boundary(area_name, which_result=1):
