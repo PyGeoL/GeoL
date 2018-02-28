@@ -5,7 +5,7 @@ File description
 # Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
 
 import abc, six
-from ..geometry.tesselation import Tessellation
+from ..geometry.grid import Tessellation
 import geopandas as gpd
 import pandas as pd
 from ..utils import constants

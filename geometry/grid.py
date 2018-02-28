@@ -5,17 +5,19 @@ File description
 # Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
 import logging
 import time
+import six
+import abc
+
 from ..utils import constants
 import geopandas as gpd
 import sys
 
-
-class Tessellation:
+@six.add_metaclass(abc.ABCMeta)
+class Grid:
 
     def __init__(self, factory=None, **kwargs):
         """
 
-        :param factory: factory class to build the tessellation
         :param kwargs:
                         logger
                         area_name (mandatory if factory is none)
@@ -35,23 +37,27 @@ class Tessellation:
                          self.__properties['id'] + ")")
         start = time.time()
 
-        self.__tessellation, self.__area = factory.build_tessellation()
+        self.__grid, self.__area = factory.build_tessellation()
 
         end = time.time()
         self.logger.info(
             "End creating grid (" + self.__properties['id'] + ") in " + str(end - start))
 
+    @abc.abstractmethod
+    def read(self, inputfile):
+        pass
+
+    @abc.abstractmethod
     def write(self, outputfile):
-        """
-        Write the tesselation on file.
-        TODO: manage the problem with crs and possibly add properties!
-        """
-        with open(outputfile, 'w') as f:
-            f.write(self.__tessellation.to_json())
+       pass
 
     @property
-    def tessellation(self):
-        return self.__tessellation
+    def grid(self):
+           return self.__grid
+
+       with open(outputfile, 'w') as f:
+            f.write(self.__tessellation.to_json())
+
 
     @property
     def area(self):
