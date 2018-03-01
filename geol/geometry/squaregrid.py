@@ -14,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class SquareGrid(Grid):
 
     def __init__(self, base_shape, meters=50, window_size=None, grid_crs=constants.default_crs):
@@ -22,7 +23,8 @@ class SquareGrid(Grid):
 
         # Compute Bounding Box if requested
         if window_size is not None:
-            self.__base_shape = utils.build_bbox(area=base_shape, bbox_side_len=window_size)
+            self.__base_shape = utils.build_bbox(
+                area=base_shape, bbox_side_len=window_size)
         else:
             self.__base_shape = base_shape
 
@@ -31,27 +33,26 @@ class SquareGrid(Grid):
 
         self.__build()
 
-
     @classmethod
     def from_file(cls, filepath, meters=50, window_size=None, input_crs=constants.default_crs, grid_crs=constants.default_crs):
         base_shape = gpd.GeoDataFrame.from_file(os.path.abspath(filepath))
-        base_shape.crs = {'init':input_crs}
+        base_shape.crs = {'init': input_crs}
         return cls(base_shape, meters, window_size, grid_crs=grid_crs)
-
 
     @classmethod
     def from_name(cls, area_name, meters=50, window_size=None, grid_crs=constants.default_crs):
         base_shape = utils.get_area_boundary(area_name)
         return cls(base_shape, meters, window_size, grid_crs=grid_crs)
 
-
     def __build(self):
 
         # Re-project data
-        logger.debug("Convert area to crs epsg:" + constants.universal_crs + ".")
+        logger.debug("Convert area to crs epsg:" +
+                     constants.universal_crs + ".")
 
         # We work with the universal crs epsg:3857
-        area = self.__base_shape.to_crs({'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
+        area = self.__base_shape.to_crs(
+            {'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
 
         logger.debug("Defining boundaries.")
 
@@ -62,8 +63,10 @@ class SquareGrid(Grid):
                            'max_y': area.total_bounds[3]})
 
         # Find number of square for each side
-        x_squares = int(math.ceil(math.fabs(boundaries['max_x'] - boundaries['min_x']) / self.__meters))
-        y_squares = int(math.ceil(math.fabs(boundaries['min_y'] - boundaries['max_y']) / self.__meters))
+        x_squares = int(math.ceil(
+            math.fabs(boundaries['max_x'] - boundaries['min_x']) / self.__meters))
+        y_squares = int(math.ceil(
+            math.fabs(boundaries['min_y'] - boundaries['max_y']) / self.__meters))
 
         # placeholder for the polygon
         polygons = []
@@ -108,7 +111,8 @@ class SquareGrid(Grid):
         logger.debug("End creation of cells.")
 
         # Create the geoDataFrame and convert to the input crs.
-        gdf = gpd.GeoDataFrame(polygons, crs={'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
+        gdf = gpd.GeoDataFrame(
+            polygons, crs={'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
         self._grid = gdf.to_crs({'init': self._crs})
 
     @property
