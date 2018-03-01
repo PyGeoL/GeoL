@@ -1,5 +1,4 @@
-import logging
-logger = logging.getLogger(__name__)
+from geol.geol_logger.geol_logger import logger
 
 
 class Test():
@@ -12,6 +11,9 @@ class Test():
 
     def log_2(self, text):
         logger.info(text)
+
+    def log_3(self, text):
+        logger.debug(text)
 
     def talk(self, text):
         print(text)
