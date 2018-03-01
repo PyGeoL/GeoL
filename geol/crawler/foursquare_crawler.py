@@ -3,6 +3,8 @@ import pandas as pd
 import time
 import pkg_resources
 import os
+from geol.geol_logger.geol_logger import logger
+from geol.utils import constants
 
 class Foursquare:
 
@@ -18,6 +20,7 @@ class Foursquare:
 
     def start(self, grid, output):
 
+        # Remove the file if it's already exists
         try:
             os.remove(output)
         except OSError:
@@ -28,6 +31,8 @@ class Foursquare:
         request_counter = 0
         foursquare_data = pd.DataFrame(columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
 
+        #TODO: manage the possibility to restart the crawler from the last interruption
+
         for ind in range(0, len(grid)):
 
             request_counter += 1
@@ -36,19 +41,23 @@ class Foursquare:
             ctm = time.time()
             difference_time = ctm - tm
 
-            print("# Requests " + str(request_counter))
+            logger.info("# Requests " + str(request_counter))
 
-            if((difference_time > 3500) or (((request_counter % 4500) == 0) & (request_counter > 0))):
-                print("wait", (3600 - difference_time))
+            if((difference_time > constants.time_limit) or (((request_counter % constants.max_request_per_hour) == 0) & (request_counter > 0))):
+                logger.info("wait", (3600 - difference_time))
 
                 sl = int(3600 - difference_time + 10)
                 tm = 0
 
-                # if (os.path.isfile(output)):
-                #    with open(output, 'a') as f:
-                #        foursquare_data.to_csv(f, header=False, index=False, encoding='utf-8')
-                # else:
-                foursquare_data.to_csv(output, encoding='utf-8', index=False)
+                if (os.path.isfile(output)):
+                    with open(output, 'a') as f:
+                        foursquare_data.to_csv(f, header=False, index=False, encoding='utf-8')
+                    f.close()
+                else:
+                    foursquare_data.to_csv(output, encoding='utf-8', index=False)
+
+                # Reset pois
+                foursquare_data = pd.DataFrame(columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
 
                 time.sleep(sl)
                 tm = time.time()
@@ -62,8 +71,7 @@ class Foursquare:
             ne = g_parse[2].split(" ")  # ne
             #print("row:{} sw:{} ne:{}".format(row.name,sw,ne))
 
-            print(str(ind) + " - " + str(sw[1]) + ", " +
-                  str(sw[0]) + ", " + str(ne[1]) + ", " + str(ne[0]))
+            logger.info(str(ind) + " - " + str(sw[1]) + ", " + str(sw[0]) + ", " + str(ne[1]) + ", " + str(ne[0]))
 
             # start request
             params = dict(
@@ -79,19 +87,21 @@ class Foursquare:
             #"?sw=" + sw[1] + "," + sw[0] + "&ne=" + ne[1] + "," + ne[0] + \
             #"&intent=browse&client_id=" + self.client_id + "&client_secret=" + self.client_secret + "&v=20170706"
 
-            print (url)
+            logger.info(url)
 
             try:
+
                 data = requests.get(url=url, params=params).json()
+
             except Exception as exc:
-                print("ERROR: {0}".format(exc))
+                logger.error("ERROR: {0}".format(exc))
 
             # end request
 
-            print(data)
+            logger.debug(data)
 
             if(('code' in data['meta']) & (data['meta']['code'] == 403)):
-                print("wait")
+                logger.info("Wait")
                 time.sleep(7500)
                 tm = time.time()
 
@@ -104,7 +114,6 @@ class Foursquare:
                     if len(current_cat) == 0:
                         continue
 
-                    cat_name = []
                     checkin = data['response']['venues'][glob]['stats']['checkinsCount']
                     user = data['response']['venues'][glob]['stats']['usersCount']
                     name = data['response']['venues'][glob]['name']
@@ -150,12 +159,11 @@ class Foursquare:
         foursquare_data["checkin"] = foursquare_data["checkin"].astype(int)
         foursquare_data["usercount"] = foursquare_data["usercount"].astype(int)
 
-        #sstr = output + "/foursquare_dataset.csv"
-        # if(os.path.isfile(output)):
-        #    with open(output, 'a') as f:
-        #        foursquare_data.to_csv(f, header=False,index=False, encoding='utf-8')
-        # else:
-        foursquare_data.to_csv(output, encoding='utf-8', index=False)
+        if(os.path.isfile(output)):
+            with open(output, 'a') as f:
+                foursquare_data.to_csv(f, header=False,index=False, encoding='utf-8')
+            f.close()
+        else:
+            foursquare_data.to_csv(output, encoding='utf-8', index=False)
 
-        #del foursquare_data
-        return foursquare_data
+

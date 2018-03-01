@@ -23,8 +23,7 @@ class SquareGrid(Grid):
 
         # Compute Bounding Box if requested
         if window_size is not None:
-            self.__base_shape = utils.build_bbox(
-                area=base_shape, bbox_side_len=window_size)
+            self.__base_shape = utils.build_bbox(area=base_shape, bbox_side_len=window_size)
         else:
             self.__base_shape = base_shape
 
@@ -47,12 +46,10 @@ class SquareGrid(Grid):
     def __build(self):
 
         # Re-project data
-        logger.debug("Convert area to crs epsg:" +
-                     constants.universal_crs + ".")
+        logger.debug("Convert area to crs epsg:" + constants.universal_crs + ".")
 
         # We work with the universal crs epsg:3857
-        area = self.__base_shape.to_crs(
-            {'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
+        area = self.__base_shape.to_crs({'init': constants.universal_crs, 'units': 'm'})
 
         logger.debug("Defining boundaries.")
 
@@ -112,7 +109,7 @@ class SquareGrid(Grid):
 
         # Create the geoDataFrame and convert to the input crs.
         gdf = gpd.GeoDataFrame(
-            polygons, crs={'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
+            polygons, crs={'init': constants.universal_crs, 'units': 'm'})
         self._grid = gdf.to_crs({'init': self._crs})
 
     @property
