@@ -104,3 +104,6 @@ ENV/
 
 # settings
 settings.py
+
+#pycharm
+.idea/*
