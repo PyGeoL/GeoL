@@ -10,9 +10,7 @@ import geopandas as gpd
 import math
 from shapely.geometry import Polygon
 import os
-import logging
-
-logger = logging.getLogger(__name__)
+from geol.geol_logger.geol_logger import logger
 
 
 class SquareGrid(Grid):
