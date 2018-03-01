@@ -2,14 +2,15 @@
 Useful constants
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+# Authors:  Gianni Barlacchi <gianni.barlacchi@gmail.com>
+#           Michele Ferretti <mic.ferretti@gmail.com>
 
 import os
 
 universal_crs = "3857"
 default_crs = "epsg:4326"
 
-# FOURSQUARE
+# TODO CREATE INI FILE
 CLIENT_ID_1 = "3LHNU3QCAKWWZHHJ5G14MTOL5XBHQATYDZS0UZELXHTXCUF2"
 FOURSQUARE_API_TOKEN_1 = os.environ["FOURSQUARE_API_TOKEN_1"]
 
