@@ -10,16 +10,19 @@ import geopandas as gpd
 import math
 from shapely.geometry import Polygon
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SquareGrid(Grid):
 
-    def __init__(self, base_shape, meters=50, window_size=None, crs=constants.universal_crs):
+    def __init__(self, base_shape, meters=50, window_size=None, grid_crs=constants.default_crs):
 
-        super().__init__(crs=crs)
+        super().__init__(crs=grid_crs)
 
         # Compute Bounding Box if requested
-        if self.__window_size is not None:
-            self.__base_shape = utils.build_bbox(self.__base_shape)
+        if window_size is not None:
+            self.__base_shape = utils.build_bbox(area=base_shape, bbox_side_len=window_size)
         else:
             self.__base_shape = base_shape
 
@@ -28,27 +31,29 @@ class SquareGrid(Grid):
 
         self.__build()
 
-    @classmethod
-    def from_file(cls, filepath, meters=50, window_size=None, input_crs=constants.default_crs):
-        base_shape = gpd.GeoDataFrame.from_file(os.path.abspath(filepath))
-        base_shape.crs = {'init':input_crs}
-        cls(base_shape, meters, window_size)
 
     @classmethod
-    def from_name(cls, area_name, meters=50, window_size=None):
+    def from_file(cls, filepath, meters=50, window_size=None, input_crs=constants.default_crs, grid_crs=constants.default_crs):
+        base_shape = gpd.GeoDataFrame.from_file(os.path.abspath(filepath))
+        base_shape.crs = {'init':input_crs}
+        return cls(base_shape, meters, window_size, grid_crs=grid_crs)
+
+
+    @classmethod
+    def from_name(cls, area_name, meters=50, window_size=None, grid_crs=constants.default_crs):
         base_shape = utils.get_area_boundary(area_name)
-        cls(base_shape, meters, window_size)
+        return cls(base_shape, meters, window_size, grid_crs=grid_crs)
 
 
     def __build(self):
 
         # Re-project data
-        self.logger.debug("Convert area to crs epsg:" + constants.universal_crs + ".")
+        logger.debug("Convert area to crs epsg:" + constants.universal_crs + ".")
 
         # We work with the universal crs epsg:3857
         area = self.__base_shape.to_crs({'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
 
-        self.logger.debug("Defining boundaries.")
+        logger.debug("Defining boundaries.")
 
         # Obtain the boundaries of the geometry
         boundaries = dict({'min_x': area.total_bounds[0],
@@ -65,7 +70,7 @@ class SquareGrid(Grid):
 
         shape = area.unary_union
 
-        self.logger.debug("Creating cells.")
+        logger.debug("Creating cells.")
         # iterate on the x
         for i in range(0, x_squares):
 
@@ -100,11 +105,11 @@ class SquareGrid(Grid):
                     polygon_desc['geometry'] = p
                     polygons.append(polygon_desc)
 
-        self.logger.debug("End creation of cells.")
+        logger.debug("End creation of cells.")
 
         # Create the geoDataFrame and convert to the input crs.
         gdf = gpd.GeoDataFrame(polygons, crs={'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
-        self.__grid = gdf.to_crs({'init': self.__crs})
+        self._grid = gdf.to_crs({'init': self._crs})
 
     @property
     def base_shape(self):
