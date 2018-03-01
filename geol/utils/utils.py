@@ -9,6 +9,8 @@ import osmnx
 from shapely import geometry
 import geopandas as gpd
 from geol.utils import constants
+import os
+import errno
 
 
 def get_area_boundary(area_name, which_result=1):
@@ -47,18 +49,38 @@ def build_bbox(area, bbox_side_len=500):
     :param bbox_side_len: length of the bbox rectangle. Defaults to 500 meters.
 
     """
-
+    # Make sure we are working with projected data
+    area = area.to_crs(
+        {'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
     # get area centroid
     centroid = area.centroid[0].coords[0]
+    print(centroid)
 
     # get North-East corner
-    NE = [float(coord)+bbox_side_len for coord in centroid]
+    NE = [float(coord)+(bbox_side_len/2) for coord in centroid]
     # get South-West corner
-    SW = [float(coord)-bbox_side_len for coord in centroid]
+    SW = [float(coord)-(bbox_side_len/2) for coord in centroid]
 
     # build bbox from NE,SW corners
     bbox = geometry.box(SW[0], SW[1], NE[0], NE[1], ccw=True)
+    print(bbox)
     poly_df = gpd.GeoDataFrame(geometry=[bbox])
-    poly_df.crs = {'init': 'epsg:' + constants.universal_crs, 'units': 'm'}
+    poly_df.crs = {'init': 'epsg:' +
+                   constants.universal_crs, 'units': 'm'}
 
     return poly_df
+
+
+def assign_crs(grid, crs):
+    print(crs)
+    if crs is not None:
+        return grid.to_crs({'init': crs})
+    return grid
+
+
+def silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError as e:  # this would be "except OSError, e:" before Python 2.6
+        if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
+            raise  # re-raise exception if a different error occurred
