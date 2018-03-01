@@ -10,7 +10,7 @@ import logging
 import os
 import matplotlib as mpl
 mpl.use('TkAgg')
-from geol.geometry import grid
+from geol.geometry.squaregrid import SquareGrid
 import multiprocessing
 
 #TODO switch to joblib
@@ -19,23 +19,23 @@ os.environ['NO_PROXY'] = "nominatim.openstreetmap.org"
 logger = logging.getLogger(__name__)
 
 
-def write_grid(outputfolder, meters, window_size, base_shape, crs):
+def write_grid(output, size, type, window_size, crs,
+               area_name, base_shape):
     """
     Create the tessellation and save into the outputfolder.
     """
     try:
-        if base_shape is None
+        grid = None
 
-        tessellation = Tessellation(factory, logger=logger)
-        outputfolder = os.path.abspath(os.path.join(
-            outputfolder, "tessellation_" + tessellation.id + ".geojson"))
-        tessellation.write(outputfolder)
+        if base_shape is not None:
+            grid = SquareGrid.from_file(base_shape, meters=size, window_size=window_size, grid_crs=crs)
+        else:
+            grid = SquareGrid.from_name(area_name, meters=size, window_size=window_size, grid_crs=crs)
 
-        return tessellation
+        grid.write(output,)
 
     except:
-        logger.error("Error in creating tessellation " +
-                     outputfolder, exc_info=True)
+        logger.error("Error in creating tessellation " + output, exc_info=True)
         sys.exit(0)
 
 
@@ -68,24 +68,30 @@ def main(argv):
                         action='store',
                         dest='area',
                         help='Area name in the format of "Area name, Country"',
+                        default=None,
                         type=str)
 
     parser.add_argument('-ws', '--window_size',
                         help='Size of the window around the shape centroid.',
                         action='store',
                         dest='window_size',
+                        default=None,
                         type=int)
 
     parser.add_argument('-C', '--crs',
                         help='Coordintate reference system for the output grid.',
                         action='store',
                         dest='crs',
-                        default='4326',
+                        default='epsg:4326',
                         type=str)
 
-    parser.add_argument('-b', '--base_shape', action='store', dest='base_shape',
+    parser.add_argument('-b', '--base_shape', action='store',
                         help='Path to the shape file used as a base to build the grid over.',
+                        dest='base_shape',
+                        default=None,
                         type=str)
+
+    #TODO ADD CRS INPUT SHAPE
 
     parser.add_argument('-s', '--size',
                         help='List of cell sizes (s1, s2, ..), default = 50.',
@@ -126,26 +132,19 @@ def main(argv):
 
         try:
 
-            if (args.grid == 'square'):
-                if args.base_shape:
-                    factory = Square(meters=m, area_name=args.area,
-                                     area=os.path.abspath(args.base_shape))
-                else:
-                    factory = Square(meters=m, area_name=args.area)
-
             # Get the factory according to the tessellation type in input
             if args.mp == True:
 
-                os.path.join(dir_name, base_filename + "." + filename_suffix)
+                output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + args.grid + "_" + str(m) +".geojson"))
 
-                outfile = os.path.abspath(args.outputfolder)
-                p = multiprocessing.Process(target=write_grid, args=(args.outputfolder, logger,))
+                p = multiprocessing.Process(target=write_grid, args=(output, m, args.grid, args.window_size,
+                                                                     args.crs, args.area, args.base_shape))
                 jobs.append(p)
                 p.start()
 
             else:
-                write_tessellation(
-                    factory=factory, outputfolder=args.outputfolder, logger=logger)
+                write_grid(output, m, args.grid, args.window_size,
+                                    args.crs, args.area, args.base_shape)
 
         except ValueError:
             logger.error("Value error instantiating the grid.", exc_info=True)

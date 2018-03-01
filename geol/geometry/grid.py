@@ -14,24 +14,30 @@ class Grid:
 
     def __init__(self, crs):
 
-        self.__grid = None
-        self.__crs = crs
+        self._grid = None
+        self._crs = crs
 
     @classmethod
     def from_file(cls, inputfile, crs=constants.default_crs):
         base_shape = gpd.GeoDataFrame.from_file(os.path.abspath(inputfile))
         base_shape.crs = {'init': crs}
 
-    @abc.abstractmethod
-    def __build(self):
-        pass
+    #@abc.abstractmethod
+    #def __build(self):
+    #    pass
 
-    def write(self, filename, outputpath="./"):
+    def write(self, out, driver="ESRI Shapefile", crs=None):
 
-        #gdf.sort_values(by=["id_x", "id_y"], ascending=True, inplace=True)
-        self.__gird.reset_index().rename(columns={"index": "cellID"})\
-            .to_file(os.path.abspath(outputpath + filename), driver='ESRI Shapefile')
+        if crs is not None:
+            tmp = self._grid.to_crs({'init': crs})
+            tmp.reset_index().rename(columns={"index": "cellID"}).to_file(os.path.abspath(out), driver='ESRI Shapefile')
+        else:
+            #gdf.sort_values(by=["id_x", "id_y"], ascending=True, inplace=True)
+            self._grid.reset_index().rename(columns={"index": "cellID"})\
+                .to_file(out, driver='ESRI Shapefile')
+
+        #TODO ADD SAVE GRID IN GEOJSON
 
     @property
     def grid(self):
-           return self.__grid
+           return self._grid

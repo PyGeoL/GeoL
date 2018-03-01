@@ -40,7 +40,7 @@ def get_area_boundary(area_name, which_result=1):
     return boundary
 
 
-def build_bbox(self, area, bbox_side_len=500):
+def build_bbox(area, bbox_side_len=500):
     """
 
     :param area: area whose centroid is used as a starting point for building the tessellation
