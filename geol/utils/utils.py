@@ -9,8 +9,13 @@ import osmnx
 from shapely import geometry
 import geopandas as gpd
 from geol.utils import constants
+<< << << < HEAD
 import os
 import errno
+
+== == == =
+import json
+>>>>>> > 683b852095ade2ed3d1b9f4d736888d34f9aa347
 
 
 def get_area_boundary(area_name, which_result=1):
@@ -51,7 +56,7 @@ def build_bbox(area, bbox_side_len=500):
     """
     # Make sure we are working with projected data
     area = area.to_crs(
-        {'init': 'epsg:' + constants.universal_crs, 'units': 'm'})
+        {'init':  constants.universal_crs, 'units': 'm'})
     # get area centroid
     centroid = area.centroid[0].coords[0]
     print(centroid)
@@ -65,8 +70,7 @@ def build_bbox(area, bbox_side_len=500):
     bbox = geometry.box(SW[0], SW[1], NE[0], NE[1], ccw=True)
     print(bbox)
     poly_df = gpd.GeoDataFrame(geometry=[bbox])
-    poly_df.crs = {'init': 'epsg:' +
-                   constants.universal_crs, 'units': 'm'}
+    poly_df.crs = {'init': constants.universal_crs, 'units': 'm'}
 
     return poly_df
 
@@ -84,3 +88,12 @@ def silentremove(filename):
     except OSError as e:  # this would be "except OSError, e:" before Python 2.6
         if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
             raise  # re-raise exception if a different error occurred
+    return poly_df
+
+
+def read_foursqaure_keys(filename):
+
+    with open(filename) as json_data_file:
+        data = json.load(json_data_file)
+
+    return data

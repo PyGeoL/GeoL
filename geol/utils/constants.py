@@ -5,24 +5,13 @@ Useful constants
 # Authors:  Gianni Barlacchi <gianni.barlacchi@gmail.com>
 #           Michele Ferretti <mic.ferretti@gmail.com>
 
-import os
+universal_crs = "epsg:3857"
+default_crs = "epsg:4326"
 
-universal_crs = "3857"  # Projected
-default_crs = "epsg:4326"  # Geographic
+# Foursquare crawler setup
+max_request_per_hour = 4000
+time_limit = 3480
 
-# TODO CREATE INI FILE
-CLIENT_ID_1 = "3LHNU3QCAKWWZHHJ5G14MTOL5XBHQATYDZS0UZELXHTXCUF2"
-FOURSQUARE_API_TOKEN_1 = "DYLVKJCDAGTIP41PLBK0NGI0MJLFRKKADQGMYTG3NSHEO0L1"
-# os.environ["FOURSQUARE_API_TOKEN_1"]
-
-#CLIENT_ID_2 = "MEKOQ5OBYEN3AGBG2YGHR1IDBQABC4PFF3DJJWPNZ4ERLZ5X"
-#FOURSQUARE_API_TOKEN_2 = os.environ["FOURSQUARE_API_TOKEN_2"]
-
-#CLIENT_ID_3 = "HVI0XOSIHAFFV0YGRVHC0RQ2KAZUEGL1THLVE0WLRAEHFQQM"
-#FOURSQUARE_API_TOKEN_3 = os.environ["FOURSQUARE_API_TOKEN_3"]
-
-#CLIENT_ID_4 = "5LDPHKOLC0GPBVK4GXO4PFKYT1BAFMU3NL1TIRBO3DY5Z3K3"
-#FOURSQUARE_API_TOKEN_4 = os.environ["FOURSQUARE_API_TOKEN_4"]
 
 # Urban Atlas
 ITEM_COL = "ITEM2012"
