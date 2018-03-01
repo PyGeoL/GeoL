@@ -9,7 +9,7 @@ import osmnx
 from shapely import geometry
 import geopandas as gpd
 from geol.utils import constants
-
+import json
 
 def get_area_boundary(area_name, which_result=1):
 
@@ -62,3 +62,10 @@ def build_bbox(area, bbox_side_len=500):
     poly_df.crs = {'init': 'epsg:' + constants.universal_crs, 'units': 'm'}
 
     return poly_df
+
+def read_foursqaure_keys(filename):
+
+    with open(filename) as json_data_file:
+        data = json.load(json_data_file)
+
+    return data

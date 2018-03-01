@@ -4,7 +4,6 @@ import time
 import pkg_resources
 import os
 
-
 class Foursquare:
 
     def __init__(self, client_id="",
@@ -14,28 +13,32 @@ class Foursquare:
         self.client_secret = client_secret
 
         # Load category names
-        self.cat = pd.read_csv(pkg_resources.resource_filename(
-            'geol', '/resources/category_tree.csv'))
+        self.cat = pd.read_csv(pkg_resources.resource_filename('geol', '/resources/category_tree.csv'), encoding="iso-8859-1")
         self.cat.set_index("cat", inplace=True)
 
     def start(self, grid, output):
 
+        try:
+            os.remove(output)
+        except OSError:
+            pass
+
         # Initialize timer and requests counter
         tm = time.time()
         request_counter = 0
-        foursquare_data = pd.DataFrame(
-            columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
+        foursquare_data = pd.DataFrame(columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
 
         for ind in range(0, len(grid)):
-            request_counter = request_counter+1
 
-            # Time checking, 100seconds before an hour or at 4990 requests until the end of the hour
+            request_counter += 1
+
+            # Time checking, 120seconds before an hour or at 4000 requests until the end of the hour
             ctm = time.time()
             difference_time = ctm - tm
 
-            print "# Requests " + str(request_counter)
+            print("# Requests " + str(request_counter))
 
-            if((difference_time > 3500) or (((request_counter % 4990) == 0) & (request_counter > 0))):
+            if((difference_time > 3500) or (((request_counter % 4500) == 0) & (request_counter > 0))):
                 print("wait", (3600 - difference_time))
 
                 sl = int(3600 - difference_time + 10)
@@ -81,7 +84,7 @@ class Foursquare:
             try:
                 data = requests.get(url=url, params=params).json()
             except Exception as exc:
-                print "ERROR: {0}".format(exc)
+                print("ERROR: {0}".format(exc))
 
             # end request
 
