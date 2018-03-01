@@ -9,14 +9,9 @@ import osmnx
 from shapely import geometry
 import geopandas as gpd
 from geol.utils import constants
-<< << << < HEAD
+import json
 import os
 import errno
-
-== == == =
-import json
->>>>>> > 683b852095ade2ed3d1b9f4d736888d34f9aa347
-
 
 def get_area_boundary(area_name, which_result=1):
 
@@ -88,7 +83,6 @@ def silentremove(filename):
     except OSError as e:  # this would be "except OSError, e:" before Python 2.6
         if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
             raise  # re-raise exception if a different error occurred
-    return poly_df
 
 
 def read_foursqaure_keys(filename):
