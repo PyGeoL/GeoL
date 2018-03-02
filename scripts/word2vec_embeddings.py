@@ -149,7 +149,7 @@ def main(argv):
                         action='store',
                         dest='plot',
                         help='t-SNE plot',
-                        default='w2v',
+                        default='False',
                         type=str)
 
     parser.add_argument('-s', '--size',
