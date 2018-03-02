@@ -1,5 +1,5 @@
 """
-Script to word2vec models, given a set of mapped POIs.
+Script to create word2vec models, given a set of mapped POIs.
 """
 
 # Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
@@ -70,18 +70,20 @@ def pre_processing(INPUT_FILE, depth_level=3):
     return labels_joined_list
 
 
-def run_w2v_model(output, word_list, size, count, window, plot):
+def run_w2v_model(outputfolder, word_list, size, count, window, plot):
     """
     Run Word2Vec model
     """
+    output = os.path.abspath(os.path.join(outputfolder, 'models', args.prefix + str(size) +
+                                          '_'+str(window)+'_'+str(count)+'.model'))
     model = gensim.models.Word2Vec(
         word_list, size=size, min_count=count, window=window, workers=8)  # size 5 is default
     model.save(output)
     if plot:
-        tsne_plot(model, size, window, count)
+        tsne_plot(model, size, window, count, outputfolder)
 
 
-def tsne_plot(model, size, window, count):
+def tsne_plot(model, size, window, count, outputfolder):
     """
     Creates and TSNE model and plots it
     """
@@ -113,7 +115,7 @@ def tsne_plot(model, size, window, count):
                      ha='right',
                      va='bottom')
     plt.title('Size:'+str(size)+' Window:'+str(window)+' Count:'+str(count))
-    plt.savefig(os.path.abspath(os.path.join(args.outputfolder, 'imgs', 'nearest_'+str(size)+'_' + str(window) +
+    plt.savefig(os.path.abspath(os.path.join(outputfolder, 'imgs', 'nearest_'+str(size)+'_' + str(window) +
                                              '_'+str(count)+'.png', bbox_inches='tight')))
     plt.show()
 
@@ -195,11 +197,8 @@ def main(argv):
                     # Get the factory according to the tessellation type in input
                     if args.mp == True:
 
-                        output = os.path.abspath(os.path.join(args.outputfolder, 'models', args.prefix + str(size) +
-                                                              '_'+str(window)+'_'+str(count)+'.model'))
-
                         p = multiprocessing.Process(target=run_w2v_model, args=(
-                            output, word_list, size, count, window, args.plt))
+                            args.outputfolder, word_list, size, count, window, args.plt))
 
                         jobs.append(p)
                         p.start()
