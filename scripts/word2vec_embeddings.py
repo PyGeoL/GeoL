@@ -15,7 +15,7 @@ import os
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import multiprocessing
-import geol.geol_logger.geol_logger import logger
+from geol.geol_logger.geol_logger import logger
 
 # word_list = pre_processing(INPUT_FILE)
 

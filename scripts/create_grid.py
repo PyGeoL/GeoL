@@ -6,7 +6,7 @@ Script to create grid(s), given input args.
 
 import argparse
 import sys
-import geol.geol_logger.geol_logger import logger
+from geol.geol_logger.geol_logger import logger
 import os
 import matplotlib as mpl
 mpl.use('TkAgg')
