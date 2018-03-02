@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import multiprocessing
 from geol.geol_logger.geol_logger import logger
 
-# word_list = pre_processing(INPUT_FILE)
+# word_list = pre_processing(args.)
 
 
 # windows = [3, 5, 7, 10]
@@ -54,14 +54,14 @@ def select_category(list_of_labels, level):
     return tmp
 
 
-def pre_processing(INPUT_FILE, depth_level=3):
+def pre_processing(input_file, depth_level=3):
     """
     Inputs a file of tab-separated labels for each grid cell
     Returns array of array of joined labels for specified depth level (default=3)
     """
 
     #  import text file
-    with open(INPUT_FILE, 'r') as input:
+    with open(input_file, 'r') as input:
         text = input.read()
 
     # split on new lines and remove empty lines
@@ -73,11 +73,11 @@ def pre_processing(INPUT_FILE, depth_level=3):
     return labels_joined_list
 
 
-def run_w2v_model(outputfolder, word_list, size, count, window, plot):
+def run_w2v_model(outputfolder, word_list, prefix, size, count, window, plot):
     """
     Run Word2Vec model
     """
-    output = os.path.abspath(os.path.join(outputfolder, 'models', args.prefix + str(size) +
+    output = os.path.abspath(os.path.join(outputfolder, 'models', prefix + str(size) +
                                           '_'+str(window)+'_'+str(count)+'.model'))
     model = gensim.models.Word2Vec(
         word_list, size=size, min_count=count, window=window, workers=8)  # size 5 is default
@@ -125,12 +125,12 @@ def tsne_plot(model, size, window, count, outputfolder):
 
 def main(argv):
 
-    parser = argparse.ArgumentParser('Build your own grid.')
+    parser = argparse.ArgumentParser('Build your own Word2Vec embeddings.')
 
     parser.add_argument('-i', '--inputfile',
                         help='Input file.',
                         action='store',
-                        dest='input_file',
+                        dest='args.',
                         required='True',
                         type=str)
 
@@ -204,23 +204,25 @@ def main(argv):
         jobs = []
 
     # load data
-    word_list = pre_processing(os.path.abspath(input_file))
+    word_list = pre_processing(os.path.abspath(args.input_file))
 
     # create word embeddings
     for size in args.sizes:
         for window in args.windows:
-            for count in counts:
+            for count in args.counts:
                 try:
                     # Get the factory according to the tessellation type in input
                     if args.mp == True:
 
                         p = multiprocessing.Process(target=run_w2v_model, args=(
-                            args.outputfolder, word_list, size, count, window, args.plt))
+                            args.outputfolder, word_list, args.prefix, size, count, window, args.plt))
 
                         jobs.append(p)
                         p.start()
 
                     else:
+                        output = os.path.abspath(os.path.join(args.outputfolder, 'models', args.prefix + str(size) +
+                                                              '_'+str(window)+'_'+str(count)+'.model'))
                         run_w2v_model(output, word_list, size, count, window)
 
                 except ValueError:
