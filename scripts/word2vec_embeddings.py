@@ -14,6 +14,8 @@ import string
 import os
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+import multiprocessing
+import geol.geol_logger.geol_logger import logger
 
 # word_list = pre_processing(INPUT_FILE)
 
@@ -173,6 +175,14 @@ def main(argv):
                         default=[50],
                         type=int)
 
+    parser.add_argument('-v', '--verbose',
+                        help='Level of output verbosity.',
+                        action='store',
+                        dest='verbosity',
+                        default=0,
+                        type=int,
+                        nargs="?")
+
     args = parser.parse_args()
 
     if(args.verbosity == 1):
@@ -206,13 +216,15 @@ def main(argv):
                     else:
                         run_w2v_model(output, word_list, size, count, window)
 
-    except ValueError:
-        logger.error("Value error instantiating the grid.", exc_info=True)
-        sys.exit(1)
+                except ValueError:
+                    logger.error(
+                        "Value error instantiating the grid.", exc_info=True)
+                    sys.exit(1)
 
-    except TypeError:
-        logger.error("Type error building the grid.", exc_info=True)
-        sys.exit(1)
+                except TypeError:
+                    logger.error(
+                        "Type error building the grid.", exc_info=True)
+                    sys.exit(1)
 
 
 if __name__ == "__main__":
