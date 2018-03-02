@@ -176,6 +176,12 @@ def main(argv):
                         default=[50],
                         type=int)
 
+    parser.add_argument('-m', '--multiprocessing',
+                        help='Abilitate multiprocessing (strongly suggested when more CPUs are available)',
+                        dest='mp',
+                        action='store_true',
+                        default=False)
+
     parser.add_argument('-v', '--verbose',
                         help='Level of output verbosity.',
                         action='store',
