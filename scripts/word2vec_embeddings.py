@@ -12,6 +12,7 @@ import logging
 import re
 import string
 import os
+import sys
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import multiprocessing
