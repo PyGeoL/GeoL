@@ -191,7 +191,7 @@ def main(argv):
                         nargs="?")
 
     args = parser.parse_args()
-
+    print(args)
     if(args.verbosity == 1):
         logger.basicConfig(
             format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -223,7 +223,8 @@ def main(argv):
                     else:
                         output = os.path.abspath(os.path.join(args.outputfolder, 'models', args.prefix + str(size) +
                                                               '_'+str(window)+'_'+str(count)+'.model'))
-                        run_w2v_model(output, word_list, size, count, window)
+                        run_w2v_model(output, word_list, size,
+                                      count, window, args.plot)
 
                 except ValueError:
                     logger.error(
