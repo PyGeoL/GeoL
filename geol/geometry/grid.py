@@ -8,7 +8,6 @@ from geol.utils import constants, utils
 import six
 import abc
 import os
-import json
 
 
 @six.add_metaclass(abc.ABCMeta)
