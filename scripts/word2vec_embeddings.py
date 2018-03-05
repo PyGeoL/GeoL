@@ -14,9 +14,9 @@ import string
 import os
 import sys
 from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # don't use Windows by default
+import matplotlib.pyplot as plt
 import multiprocessing
 from geol.geol_logger.geol_logger import logger
 
@@ -114,7 +114,7 @@ def tsne_plot(model, size, window, count, outputfolder):
                      va='bottom')
     plt.title('Size:'+str(size)+' Window:'+str(window)+' Count:'+str(count))
     plt.savefig(os.path.abspath(os.path.join(outputfolder, 'imgs', 'nearest_'+str(size)+'_' + str(window) +
-                                             '_'+str(count)+'.png', bbox_inches='tight')))
+                                             '_'+str(count)+'.png')), bbox_inches='tight')
     plt.show()
 
 
