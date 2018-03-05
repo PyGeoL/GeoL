@@ -8,8 +8,6 @@ import argparse
 import sys
 import logging
 import os
-import matplotlib as mpl
-mpl.use('TkAgg')
 from geol.geometry.squaregrid import SquareGrid
 import multiprocessing
 
