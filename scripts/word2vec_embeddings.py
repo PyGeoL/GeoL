@@ -130,30 +130,29 @@ def main(argv):
     parser.add_argument('-i', '--inputfile',
                         help='Input file.',
                         action='store',
-                        dest='args.',
-                        required='True',
+                        dest='input_file',
+                        required=True,
                         type=str)
 
     parser.add_argument('-o', '--outputfolder',
                         help='Output folder where to save the grids.',
                         action='store',
                         dest='outputfolder',
-                        required='True',
+                        required=True,
                         type=str)
 
     parser.add_argument('-p', '--prefix',
                         action='store',
                         dest='prefix',
-                        help='Prefix for the filename in the form <prefix>_<grid_type>_<cell_size>. By default is "w2v."',
+                        help='Prefix for the filename in the form <prefix>_<grid_type>_<cell_size>. By default is w2v',
                         default='w2v',
                         type=str)
 
     parser.add_argument('-plt', '--plot',
-                        action='store',
+                        action='store_true',
                         dest='plot',
                         help='t-SNE plot',
-                        default='False',
-                        type=str)
+                        default=False)
 
     parser.add_argument('-s', '--size',
                         help='List of vector sizes (s1, s2, ..), default = 50.',
@@ -193,12 +192,10 @@ def main(argv):
     args = parser.parse_args()
     print(args)
     if(args.verbosity == 1):
-        logger.basicConfig(
-            format='%(levelname)s: %(message)s', level=logging.INFO)
+        logger.setLevel(logging.INFO)
 
     elif(args.verbosity == 2):
-        logger.basicConfig(
-            format='%(levelname)s: %(message)s', level=logging.DEBUG)
+        logger.setLevel(logging.INFO)
 
     if args.mp == True:
         jobs = []
@@ -213,9 +210,9 @@ def main(argv):
                 try:
                     # Get the factory according to the tessellation type in input
                     if args.mp == True:
-
+                        print(args.prefix)
                         p = multiprocessing.Process(target=run_w2v_model, args=(
-                            args.outputfolder, word_list, args.prefix, size, count, window, args.plt))
+                            args.outputfolder, word_list, args.prefix, size, count, window, args.plot))
 
                         jobs.append(p)
                         p.start()
