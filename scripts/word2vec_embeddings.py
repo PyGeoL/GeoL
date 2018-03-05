@@ -45,12 +45,12 @@ def select_category(list_of_labels, level):
 
     for x in list_of_labels:
         norm_w = normalize_words(x.split(":"))
-#         print(norm_w, level)
+
         if len(norm_w) > level:
             tmp.append(norm_w[level])
         else:
             tmp.append(norm_w[len(norm_w) - 1])
-#             print("Selected level is too deep!")
+            # print("Selected level is too deep!")
     return tmp
 
 
@@ -190,7 +190,7 @@ def main(argv):
                         nargs="?")
 
     args = parser.parse_args()
-    print(args)
+
     if(args.verbosity == 1):
         logger.setLevel(logging.INFO)
 
@@ -210,7 +210,7 @@ def main(argv):
                 try:
                     # Get the factory according to the tessellation type in input
                     if args.mp == True:
-                        print(args.prefix)
+
                         p = multiprocessing.Process(target=run_w2v_model, args=(
                             args.outputfolder, word_list, args.prefix, size, count, window, args.plot))
 
