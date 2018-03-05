@@ -15,15 +15,10 @@ import os
 import sys
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')  # don't use Windows by default
 import multiprocessing
 from geol.geol_logger.geol_logger import logger
-
-# word_list = pre_processing(args.)
-
-
-# windows = [3, 5, 7, 10]
-# sizes = [50, 100, 200]
-# counts = [2, 5, 10]
 
 
 def normalize_words(words_array):
