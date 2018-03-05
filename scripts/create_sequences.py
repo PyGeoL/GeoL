@@ -7,6 +7,7 @@ Script to create grid(s), given input args.
 import argparse
 import sys
 import logging
+import os
 from geol.representations.pois_sequences import POISequences
 from geol.geometry.squaregrid import SquareGrid
 from geol.geol_logger.geol_logger import logger
@@ -47,6 +48,7 @@ def main(argv):
                         help='Input file with point-of-interests. NOTE: in the case of strategy=nearest|alphabetically, the input file must contains the column cellID.',
                         action='store',
                         dest='inputfile',
+                        required=True,
                         type=str)
 
     parser.add_argument('-p', '--prefix',
@@ -59,7 +61,7 @@ def main(argv):
     parser.add_argument('-s', '--strategy',
                         help='Strategy to use: 1 (alphabetically, 2 (nearest), 3 (distance). Default 1.',
                         action='store',
-                        dest='stragergy',
+                        dest='strategy',
                         default=1,
                         type=int)
 
@@ -90,8 +92,19 @@ def main(argv):
     sequences_generator = POISequences.from_csv(args.inputfile)
 
     if(args.strategy == 1):
-        POISequences.
-
+        strStrategy = "alphabetically"
+        output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+        sequences_generator.alphabetically_sequence(output)
+    elif (args.strategy == 2):
+        strStrategy = "nearest"
+        output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+        sequences_generator.nearest_based_sequence(output)
+    elif (args.strategy == 3):
+        strStrategy = "distance"
+        output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+        sequences_generator.distance_based_sequence(args.band_size, output)
+    else:
+        raise ValueError("Please, check the parameters as no valid configurations have been found.")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
