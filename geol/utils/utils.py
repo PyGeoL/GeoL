@@ -12,6 +12,8 @@ from geol.utils import constants
 import json
 import os
 import errno
+import re
+
 
 def get_area_boundary(area_name, which_result=1):
 
@@ -91,3 +93,50 @@ def read_foursqaure_keys(filename):
         data = json.load(json_data_file)
 
     return data
+
+
+def normalize_words(words_array):
+    """
+    remove nasty chars
+    and sets word to lowercase
+    """
+    pattern = re.compile('[\W_]+', re.UNICODE)
+    return [pattern.sub(r'', x.lower()) for x in words_array]
+
+
+def select_category(list_of_labels, level):
+    """
+    Aggregates all the labels for each feature
+    at the given level
+    separated with _
+    """
+    tmp = []
+
+    for x in list_of_labels:
+        norm_w = normalize_words(x.split(":"))
+
+        if len(norm_w) > level:
+            tmp.append(norm_w[level])
+        else:
+            tmp.append(norm_w[len(norm_w) - 1])
+            # print("Selected level is too deep!")
+    return tmp
+
+
+def pre_processing(input_file, depth_level=3):
+    """
+    Inputs a file of tab-separated labels
+    Returns array of array of joined labels for specified depth level (default=3)
+    """
+
+    #  import text file
+    with open(input_file, 'r') as input:
+        text = input.read()
+
+    # split on new lines and remove empty lines
+    labels_list = [x.split('\t') for x in list(filter(None, text.split('\n')))]
+
+    # select labels at given depth and join them
+    labels_joined_list = [select_category(x, depth_level) for x in labels_list]
+
+    return labels_joined_list
