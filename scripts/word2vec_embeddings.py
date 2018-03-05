@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 import gensim
 import logging
-import re
 import string
 import os
 import sys
@@ -19,63 +18,17 @@ matplotlib.use('Agg')  # don't use Windows by default
 import matplotlib.pyplot as plt
 import multiprocessing
 from geol.geol_logger.geol_logger import logger
+from geol.utils.utils import select_category, normalize_words, pre_processing
 
 
-def normalize_words(words_array):
-    """
-    remove nasty chars
-    and sets word to lowercase
-    """
-    pattern = re.compile('[\W_]+', re.UNICODE)
-    return [pattern.sub(r'', x.lower()) for x in words_array]
-
-
-def select_category(list_of_labels, level):
-    """
-    Aggregates all the labels for each feature
-    at the given level
-    separated with _
-    """
-    tmp = []
-
-    for x in list_of_labels:
-        norm_w = normalize_words(x.split(":"))
-
-        if len(norm_w) > level:
-            tmp.append(norm_w[level])
-        else:
-            tmp.append(norm_w[len(norm_w) - 1])
-            # print("Selected level is too deep!")
-    return tmp
-
-
-def pre_processing(input_file, depth_level=3):
-    """
-    Inputs a file of tab-separated labels for each grid cell
-    Returns array of array of joined labels for specified depth level (default=3)
-    """
-
-    #  import text file
-    with open(input_file, 'r') as input:
-        text = input.read()
-
-    # split on new lines and remove empty lines
-    labels_list = [x.split('\t') for x in list(filter(None, text.split('\n')))]
-
-    # select labels at given depth and join them
-    labels_joined_list = [select_category(x, depth_level) for x in labels_list]
-
-    return labels_joined_list
-
-
-def run_w2v_model(outputfolder, word_list, prefix, size, count, window, plot):
+def run_w2v_model(outputfolder, word_list, skip_gram, prefix, size, count, window, plot):
     """
     Run Word2Vec model
     """
     output = os.path.abspath(os.path.join(outputfolder, 'models', prefix + str(size) +
                                           '_'+str(window)+'_'+str(count)+'.model'))
     model = gensim.models.Word2Vec(
-        word_list, size=size, min_count=count, window=window, workers=8)  # size 5 is default
+        word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=8)  # size 5 is default
     model.save(output)
     if plot:
         tsne_plot(model, size, window, count, outputfolder)
@@ -149,6 +102,12 @@ def main(argv):
                         help='t-SNE plot',
                         default=False)
 
+    parser.add_argument('-sg', '--skip-gram',
+                        help='Defines the training algorithm. If 1, skip-gram is employed; otherwise, CBOW is used.',
+                        dest='skip_gram',
+                        default=0,
+                        type=int)
+
     parser.add_argument('-s', '--size',
                         help='List of vector sizes (s1, s2, ..), default = 50.',
                         dest='sizes',
@@ -207,7 +166,7 @@ def main(argv):
                     if args.mp == True:
 
                         p = multiprocessing.Process(target=run_w2v_model, args=(
-                            args.outputfolder, word_list, args.prefix, size, count, window, args.plot))
+                            args.outputfolder, word_list, args.skip_gram, args.prefix, size, count, window, args.plot))
 
                         jobs.append(p)
                         p.start()
@@ -215,7 +174,7 @@ def main(argv):
                     else:
                         output = os.path.abspath(os.path.join(args.outputfolder, 'models', args.prefix + str(size) +
                                                               '_'+str(window)+'_'+str(count)+'.model'))
-                        run_w2v_model(output, word_list, size,
+                        run_w2v_model(output, word_list, args.skip_gram, size,
                                       count, window, args.plot)
 
                 except ValueError:
