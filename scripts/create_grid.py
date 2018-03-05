@@ -2,19 +2,17 @@
 Script to create grid(s), given input args.
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
 
 import argparse
 import sys
-import logging
+from geol.geol_logger.geol_logger import logger
 import os
 from geol.geometry.squaregrid import SquareGrid
 import multiprocessing
 
-#TODO switch to joblib
+# TODO switch to joblib
 os.environ['NO_PROXY'] = "nominatim.openstreetmap.org"
-
-logger = logging.getLogger(__name__)
 
 
 def write_grid(output, size, type, window_size, crs,
@@ -26,9 +24,11 @@ def write_grid(output, size, type, window_size, crs,
         grid = None
 
         if base_shape is not None:
-            grid = SquareGrid.from_file(base_shape, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_file(
+                base_shape, meters=size, window_size=window_size, grid_crs=crs)
         else:
-            grid = SquareGrid.from_name(area_name, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_name(
+                area_name, meters=size, window_size=window_size, grid_crs=crs)
 
         grid.write(output,)
 
@@ -58,7 +58,7 @@ def main(argv):
     parser.add_argument('-p', '--prefix',
                         action='store',
                         dest='prefix',
-                        help='Prefix for the filename. By the default is <prefix>_<grid_type>_<cell_size>, by default is grid.',
+                        help='Prefix for the filename in the form <prefix>_<grid_type>_<cell_size>. By default is grid.',
                         default='grid',
                         type=str)
 
@@ -89,7 +89,7 @@ def main(argv):
                         default=None,
                         type=str)
 
-    #TODO ADD CRS INPUT SHAPE
+    # TODO ADD CRS INPUT SHAPE
 
     parser.add_argument('-s', '--size',
                         help='List of cell sizes (s1, s2, ..), default = 50.',
@@ -112,15 +112,14 @@ def main(argv):
                         type=int,
                         nargs="?")
 
-
     args = parser.parse_args()
 
     if(args.verbosity == 1):
-        logging.basicConfig(
+        logger.basicConfig(
             format='%(levelname)s: %(message)s', level=logging.INFO)
 
     elif(args.verbosity == 2):
-        logging.basicConfig(
+        logger.basicConfig(
             format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
     if args.mp == True:
@@ -133,7 +132,8 @@ def main(argv):
             # Get the factory according to the tessellation type in input
             if args.mp == True:
 
-                output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + args.grid + "_" + str(m) +".geojson"))
+                output = os.path.abspath(os.path.join(
+                    args.outputfolder, args.prefix + "_" + args.grid + "_" + str(m) + ".geojson"))
 
                 p = multiprocessing.Process(target=write_grid, args=(output, m, args.grid, args.window_size,
                                                                      args.crs, args.area, args.base_shape))
@@ -142,7 +142,7 @@ def main(argv):
 
             else:
                 write_grid(output, m, args.grid, args.window_size,
-                                    args.crs, args.area, args.base_shape)
+                           args.crs, args.area, args.base_shape)
 
         except ValueError:
             logger.error("Value error instantiating the grid.", exc_info=True)
