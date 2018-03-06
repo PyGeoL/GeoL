@@ -4,9 +4,9 @@ Script to create grid(s), given input args.
 
 # Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
 
+from geol.geol_logger.geol_logger import logger
 import argparse
 import sys
-from geol.geol_logger.geol_logger import logger
 import os
 from geol.geometry.squaregrid import SquareGrid
 import multiprocessing
@@ -114,7 +114,7 @@ def main(argv):
 
     args = parser.parse_args()
 
-  if(args.verbosity == 1):
+    if(args.verbosity == 1):
         logger.setLevel(logging.INFO)
 
     elif(args.verbosity == 2):

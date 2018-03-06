@@ -5,9 +5,6 @@ File description
 # Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
 
 import pandas as pd
-import numpy as np
-import gensim, logging
-import matplotlib.pyplot as plt
 from geol.utils import constants
 from geol.geol_logger.geol_logger import logger
 import pysal
@@ -99,7 +96,7 @@ class POISequences():
                    suffixes=['_observed', '_observation'])
 
         tmp = tmp.groupby(['observation', 'categories_observation']).apply(
-            lambda x: '\t'.join(x['categories_observed'])).reset_index().rename(columns={0: "seq"})
+            lambda x: '\t'.join(x['categories_observed']) if len(x) > 2 else None).dropna().reset_index().rename(columns={0: "seq"})
 
         tmp.loc[:, "complete"] = tmp['categories_observation'] + "\t" + tmp['seq']
 
@@ -113,3 +110,11 @@ class POISequences():
         df.sort_values(by=['cellID', 'distance'], inplace=True, ascending=True)
 
         df.groupby('cellID').apply(self._nearest).to_csv(outfile, index=False, header=None)
+
+    def alphabetically_sequence(self, outfile):
+
+        if('cellID' not in self._pois.columns):
+            raise ValueError("The input file with POIs must contains the column cellID.")
+
+        self._pois.sort_values(by=["cellID", "name"]).groupby('cellID')\
+            .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None)
