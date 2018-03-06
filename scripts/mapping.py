@@ -21,13 +21,13 @@ def main(argv):
             argv, "hg:d:o:n:", ["grid=", "dataset=", "outputfile=", "names="])
 
     except getopt.GetoptError:
-        print (
+        print(
             'script.py -g <grid> -d <dataset> -o <outputfile> -n <Latitude and Longitude names>')
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
-            print (
+            print(
                 'script.py -g <grid> -d <dataset> -o <outputfile> -n <Latitude and Longitude names>')
             sys.exit()
         elif opt in ("-g", "--grid"):
@@ -82,21 +82,21 @@ def main(argv):
 
     # FACCIO UNA SPACIAL JOIN CON LA GRIGLIA PER ASSOCIARE OGNI ENTRY ALLA
     # CELLA CHE LA CONTIENE ('within')
-    join = gpd.sjoin(data, gdf[['id', 'geometry']], how='inner', op='within')
+    join = gpd.sjoin(data, gdf[['cellID', 'geometry']],
+                     how='inner', op='within')
 
     print(join.head())
     print('spatial join terminata')
 
     # ELIMINO LE COLONNE NON PIÙ NECESSARIE
-    join.drop(['index_right','geometry'], axis=1, inplace=True)
+    join.drop(['index_right', 'geometry'], axis=1, inplace=True)
 
     # E RINOMINO L' 'id' DELLE CELLE
-    join.rename(columns={'id': 'cellID'}, inplace=True)
+    # join.rename(columns={'id': 'cellID'}, inplace=True)
     print(join.head())
 
     # INFINE, SCRIVO IL FILE
-    join.to_csv(outputfile, index=False, sep='\t',float_format='%.6f' )
-
+    join.to_csv(outputfile, index=False, sep='\t', float_format='%.6f')
 
     print('file salvato')
 
