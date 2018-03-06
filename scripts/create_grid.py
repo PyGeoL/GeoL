@@ -17,7 +17,7 @@ os.environ['NO_PROXY'] = "nominatim.openstreetmap.org"
 
 
 def write_grid(output, size, type, window_size, crs,
-               area_name, base_shape):
+               area_name, base_shape, driver):
     """
     Create the tessellation and save into the outputfolder.
     """
@@ -31,7 +31,7 @@ def write_grid(output, size, type, window_size, crs,
             grid = SquareGrid.from_name(
                 area_name, meters=size, window_size=window_size, grid_crs=crs)
 
-        grid.write(output,)
+        grid.write(output, driver,)
 
     except:
         logger.error("Error in creating tessellation " + output, exc_info=True)
@@ -82,6 +82,13 @@ def main(argv):
                         action='store',
                         dest='crs',
                         default='epsg:4326',
+                        type=str)
+
+    parser.add_argument('-d', '--driver',
+                        help='GDAL/OGR Driver',
+                        action='store',
+                        dest='driver',
+                        default='ESRI Shapefile',
                         type=str)
 
     parser.add_argument('-b', '--base_shape', action='store',
@@ -135,13 +142,13 @@ def main(argv):
                     args.outputfolder, args.prefix + "_" + args.grid + "_" + str(m) + ".geojson"))
 
                 p = multiprocessing.Process(target=write_grid, args=(output, m, args.grid, args.window_size,
-                                                                     args.crs, args.area, args.base_shape))
+                                                                     args.crs, args.area, args.base_shape, args.driver))
                 jobs.append(p)
                 p.start()
 
             else:
                 write_grid(output, m, args.grid, args.window_size,
-                           args.crs, args.area, args.base_shape)
+                           args.crs, args.area, args.base_shape, args.driver)
 
         except ValueError:
             logger.error("Value error instantiating the grid.", exc_info=True)
