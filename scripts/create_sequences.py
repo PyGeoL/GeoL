@@ -51,6 +51,12 @@ def main(argv):
                         required=True,
                         type=str)
 
+    parser.add_argument('-g', '--grid',
+                        help='Input grid. This is mandatory in the case of strategy=nearest.',
+                        action='store',
+                        dest='inputgrid',
+                        type=str)
+
     parser.add_argument('-p', '--prefix',
                         action='store',
                         dest='prefix',
@@ -96,9 +102,14 @@ def main(argv):
         output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
         sequences_generator.alphabetically_sequence(output)
     elif (args.strategy == 2):
+
+        if (args.inputgrid is None):
+            raise ValueError("In the case of strategy=nearest the input grid is mandatory.")
+
         strStrategy = "nearest"
         output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
-        sequences_generator.nearest_based_sequence(output)
+        sequences_generator.nearest_based_sequence(output, args.inputgrid)
+
     elif (args.strategy == 3):
         strStrategy = "distance"
         output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))

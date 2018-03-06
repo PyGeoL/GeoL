@@ -11,6 +11,7 @@ import pysal
 import geopandas as gpd
 from shapely.ops import nearest_points
 from shapely.geometry import Point
+from geol.geometry.grid import Grid
 
 
 class POISequences():
@@ -38,14 +39,15 @@ class POISequences():
 
         return cls(gdf.to_crs({'init': constants.universal_crs}))
 
-    def _centroid_distance(df):
+    def _centroid_distance(self, df):
         return df['geometry'].distance(df['centroid'])
 
-    def _nearest(df):
+    def _nearest(self, df):
 
         points = df[['categories', 'geometry']].copy()
 
-        s = str(df.iloc[0]['categories']) + "\t"
+        s = [] #str(df.iloc[0]['categories']) + "\t"
+        s.append(str(df.iloc[0]['categories']))
 
         p = df.iloc[0]['geometry']
         points = points[points.geometry != p]
@@ -54,11 +56,14 @@ class POISequences():
             nearest = points.geometry == nearest_points(p, points.geometry.unary_union)[1]
             # print points[nearest]['geometry'].iloc[0]
             p = points[nearest]['geometry'].iloc[0]
-
-            s += str(points[nearest]['categories'].iloc[0]) + "\t"
+            s.append(points[nearest]['categories'].iloc[0])
+            #s += str(points[nearest]['categories'].iloc[0]) + "\t"
             points = points[points['geometry'] != p]
 
-        return s.strip()
+        if len(s) > 2:
+            return '\t'.join(s) #s.strip()
+        else:
+            None
 
     def _distance(self, band_size=500):
 
@@ -82,11 +87,17 @@ class POISequences():
                     d['distance'] = wthresh.weights[index][i]
                     ds.append(d)
 
-        return pd.DataFrame(ds)
+        df = pd.DataFrame(ds)
+
+        return df
 
     def distance_based_sequence(self, band_size, outfile):
 
         df = self._distance(band_size)
+
+        print(df.dropna().head(10))
+        import sys
+        sys.exit(0)
 
         df.sort_values(by=['observation', 'distance'], ascending=True, inplace=True)
 
@@ -96,20 +107,30 @@ class POISequences():
                    suffixes=['_observed', '_observation'])
 
         tmp = tmp.groupby(['observation', 'categories_observation']).apply(
-            lambda x: '\t'.join(x['categories_observed']) if len(x) > 2 else None).dropna().reset_index().rename(columns={0: "seq"})
+            lambda x: '\t'.join(x['categories_observed'])).rename(columns={0: "seq"})
 
         tmp.loc[:, "complete"] = tmp['categories_observation'] + "\t" + tmp['seq']
 
         tmp['complete'].to_csv(outfile, index=False, header=None)
 
-    def nearest_based_sequence(self, outfile):
+    def nearest_based_sequence(self, outfile, inputgrid):
+
+        logger.info("Load the grid.")
+        # Load inputgrid
+        g = Grid.from_file(inputgrid)
+        grid = g.grid.to_crs({'init':constants.universal_crs})
+        grid.loc[:, 'centroid'] = grid.centroid
 
         df = self._pois.copy()
 
-        df.loc[:, 'distance'] = df.apply(self._centroid_distance, axis=1)
+        df = df.merge(grid[['cellID', 'centroid']], on='cellID')
+
+        logger.info("Compute centroid for cells.")
+        df.loc[:,'distance'] = df.apply(self._centroid_distance, axis=1)
         df.sort_values(by=['cellID', 'distance'], inplace=True, ascending=True)
 
-        df.groupby('cellID').apply(self._nearest).to_csv(outfile, index=False, header=None)
+        logger.info("Creating sequences.")
+        df.groupby('cellID').apply(self._nearest).dropna().to_csv(outfile, index=False, header=None)
 
     def alphabetically_sequence(self, outfile):
 
