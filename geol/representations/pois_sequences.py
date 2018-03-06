@@ -95,7 +95,8 @@ class POISequences():
 
         df = self._distance(band_size)
 
-        print(df.dropna().head(10))
+        print(self._pois.head(2))
+        print(type(self._pois))
         import sys
         sys.exit(0)
 
