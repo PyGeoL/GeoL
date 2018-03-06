@@ -114,13 +114,11 @@ def main(argv):
 
     args = parser.parse_args()
 
-    if(args.verbosity == 1):
-        logger.basicConfig(
-            format='%(levelname)s: %(message)s', level=logging.INFO)
+  if(args.verbosity == 1):
+        logger.setLevel(logging.INFO)
 
     elif(args.verbosity == 2):
-        logger.basicConfig(
-            format='%(levelname)s: %(message)s', level=logging.DEBUG)
+        logger.setLevel(logging.INFO)
 
     if args.mp == True:
         jobs = []
