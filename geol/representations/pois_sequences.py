@@ -54,14 +54,14 @@ class POISequences():
 
         while (len(points) > 0):
             nearest = points.geometry == nearest_points(p, points.geometry.unary_union)[1]
-            # print points[nearest]['geometry'].iloc[0]
+
             p = points[nearest]['geometry'].iloc[0]
             s.append(points[nearest]['categories'].iloc[0])
-            #s += str(points[nearest]['categories'].iloc[0]) + "\t"
+
             points = points[points['geometry'] != p]
 
         if len(s) > 2:
-            return '\t'.join(s) #s.strip()
+            return '\t'.join(s)
         else:
             None
 
@@ -95,11 +95,6 @@ class POISequences():
 
         df = self._distance(band_size)
 
-        print(self._pois.head(2))
-        print(type(self._pois))
-        import sys
-        sys.exit(0)
-
         df.sort_values(by=['observation', 'distance'], ascending=True, inplace=True)
 
         # Retrive observation/observed categories from the original dataframe
@@ -108,7 +103,7 @@ class POISequences():
                    suffixes=['_observed', '_observation'])
 
         tmp = tmp.groupby(['observation', 'categories_observation']).apply(
-            lambda x: '\t'.join(x['categories_observed'])).rename(columns={0: "seq"})
+            lambda x: '\t'.join(x['categories_observed'] if len(x) > 2 else None)).dropna().rename(columns={0: "seq"})
 
         tmp.loc[:, "complete"] = tmp['categories_observation'] + "\t" + tmp['seq']
 

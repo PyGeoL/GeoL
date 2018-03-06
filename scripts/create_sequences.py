@@ -75,6 +75,7 @@ def main(argv):
                         help='Size of the band size, required only if strategy=distance.',
                         action='store',
                         dest='band_size',
+                        default=500,
                         type=int)
 
     parser.add_argument('-v', '--verbose',
