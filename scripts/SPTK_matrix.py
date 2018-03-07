@@ -73,7 +73,7 @@ def main(argv):
     if m:
         size = m.group(1)
 
-    m = re.search('.(.+).model', t)
+    m = re.search('.(.+).model', args.input_file)
     if m:
         model_details = m.group(1)
 
