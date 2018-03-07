@@ -36,6 +36,8 @@ class Foursquare:
         request_counter = 0
         foursquare_data = pd.DataFrame(columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
 
+        logger.info("Calls to do: " + str(len(grid)-start_point))
+
         for ind in range(start_point, len(grid)):
 
             request_counter += 1
