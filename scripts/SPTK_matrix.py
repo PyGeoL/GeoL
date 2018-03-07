@@ -60,7 +60,7 @@ def main(argv):
 
     logger.info("Loading w2v model.")
 
-    model = gensim.models.Word2Vec.load(args.inputfile, binary=False)
+    model = gensim.models.Word2Vec.load(args.inputfile)
 
     tree = pd.read_csv(os.path.abspath("geol/resources/category_tree.csv"))
 
