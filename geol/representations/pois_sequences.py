@@ -32,6 +32,8 @@ class POISequences():
         logger.info("Reading POIs dataset.")
         df = pd.read_csv(inputfile, sep=sep)
 
+        df = df.head(100)
+
         # Create GeoDataFrame from the read DataFrame
         logger.info("Create GeoDataFrame")
         geometry = [Point(xy) for xy in zip(df.longitude, df.latitude)]
@@ -103,7 +105,7 @@ class POISequences():
                    suffixes=['_observed', '_observation'])
 
         tmp = tmp.groupby(['observation', 'categories_observation']).apply(
-            lambda x: '\t'.join(x['categories_observed'] if len(x) > 2 else None)).dropna().rename(columns={0: "seq"})
+            lambda x: '\t'.join(x['categories_observed']) if len(x) > 2 else None).dropna().rename(columns={0: "seq"})
 
         tmp.loc[:, "complete"] = tmp['categories_observation'] + "\t" + tmp['seq']
 
