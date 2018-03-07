@@ -22,9 +22,11 @@ def write_grid(output, size, type, window_size, crs,
         grid = None
 
         if base_shape is not None:
-            grid = SquareGrid.from_file(base_shape, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_file(
+                base_shape, meters=size, window_size=window_size, grid_crs=crs)
         else:
-            grid = SquareGrid.from_name(area_name, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_name(
+                area_name, meters=size, window_size=window_size, grid_crs=crs)
 
         grid.write(output,)
 
@@ -64,6 +66,13 @@ def main(argv):
                         default='sequences',
                         type=str)
 
+    parser.add_argument('-sp', '--sep',
+                        action='store',
+                        dest='sep',
+                        help='Separator for reading csv files. Defaults to TAB',
+                        default='\t',
+                        type=str)
+
     parser.add_argument('-s', '--strategy',
                         help='Strategy to use: 1 (alphabetically, 2 (nearest), 3 (distance). Default 1.',
                         action='store',
@@ -100,23 +109,29 @@ def main(argv):
 
     if(args.strategy == 1):
         strStrategy = "alphabetically"
-        output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+        output = os.path.abspath(os.path.join(
+            args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
         sequences_generator.alphabetically_sequence(output)
     elif (args.strategy == 2):
 
         if (args.inputgrid is None):
-            raise ValueError("In the case of strategy=nearest the input grid is mandatory.")
+            raise ValueError(
+                "In the case of strategy=nearest the input grid is mandatory.")
 
         strStrategy = "nearest"
-        output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+        output = os.path.abspath(os.path.join(
+            args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
         sequences_generator.nearest_based_sequence(output, args.inputgrid)
 
     elif (args.strategy == 3):
         strStrategy = "distance"
-        output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+        output = os.path.abspath(os.path.join(
+            args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
         sequences_generator.distance_based_sequence(args.band_size, output)
     else:
-        raise ValueError("Please, check the parameters as no valid configurations have been found.")
+        raise ValueError(
+            "Please, check the parameters as no valid configurations have been found.")
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
