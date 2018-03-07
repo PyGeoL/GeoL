@@ -11,6 +11,7 @@ import pandas as pd
 import gensim
 import pkg_resources
 from geol.geol_logger.geol_logger import logger
+from geol.utils import utils
 import re, os
 import numpy as np
 
@@ -84,7 +85,7 @@ def main(argv):
 
     for word in words:
 
-        word = re.sub('[^A-Za-z0-9#]+', " ", word).lower().strip()
+        word = utils.normalize_word(word)
 
         w = word.split(' ')
         v = [0] * size

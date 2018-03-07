@@ -95,13 +95,18 @@ def read_foursqaure_keys(filename):
     return data
 
 
+def normalize_word(word):
+
+    pattern = re.compile('[\W_]+', re.UNICODE)
+    return pattern.sub(r'', word.lower()).strip()
+
 def normalize_words(words_array):
     """
     remove nasty chars
     and sets word to lowercase
     """
     pattern = re.compile('[\W_]+', re.UNICODE)
-    return [pattern.sub(r'', x.lower()) for x in words_array]
+    return [normalize_word(x) for x in words_array]
 
 
 def select_category(list_of_labels, level):
