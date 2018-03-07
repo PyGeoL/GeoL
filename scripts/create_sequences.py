@@ -59,6 +59,12 @@ def main(argv):
                         dest='inputgrid',
                         type=str)
 
+    parser.add_argument('-gs', '--grid-size',
+                        help='Input grid size. Used only when strategy=alphabetically or strategy=nearest.',
+                        action='store',
+                        dest='grid_size',
+                        type=int)
+
     parser.add_argument('-p', '--prefix',
                         action='store',
                         dest='prefix',
@@ -110,7 +116,7 @@ def main(argv):
     if(args.strategy == 1):
         strStrategy = "alphabetically"
         output = os.path.abspath(os.path.join(
-            args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+            args.outputfolder, args.prefix + "_" + str(strStrategy) + "_" + str(args.grid_size) + ".txt"))
         sequences_generator.alphabetically_sequence(output)
     elif (args.strategy == 2):
 
@@ -120,7 +126,7 @@ def main(argv):
 
         strStrategy = "nearest"
         output = os.path.abspath(os.path.join(
-            args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+            args.outputfolder, args.prefix + "_" + str(strStrategy) + "_" + str(args.grid_size) + ".txt"))
         sequences_generator.nearest_based_sequence(output, args.inputgrid)
 
     elif (args.strategy == 3):
