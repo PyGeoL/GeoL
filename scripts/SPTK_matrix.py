@@ -62,7 +62,8 @@ def main(argv):
 
     model = gensim.models.Word2Vec.load(args.inputfile)
 
-    tree = pd.read_csv(pkg_resources.resource_filename('geol', '/resources/category_tree.csv'), encoding="iso-8859-1")
+    tree = pd.read_csv(pkg_resources.resource_filename(
+        'geol', '/resources/category_tree.csv'), encoding="iso-8859-1")
 
     words = tree['level1_name'].dropna().drop_duplicates().tolist() + \
         tree['level2_name'].dropna().drop_duplicates().tolist() + \
@@ -77,7 +78,8 @@ def main(argv):
     if m:
         model_details = m.group(1)
 
-    outputfile = "matrix_barcelona_" + model_details + ".txt"
+    outputfile = "matrix_" + args.area+
+    "_" + model_details + ".txt"
 
     f = open(outputfile, 'w')
 
