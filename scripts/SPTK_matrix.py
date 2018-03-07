@@ -11,7 +11,7 @@ import pandas as pd
 import gensim
 import pkg_resources
 from geol.geol_logger.geol_logger import logger
-import re
+import re, os
 import numpy as np
 
 
@@ -78,7 +78,7 @@ def main(argv):
     if m:
         model_details = m.group(1)
 
-    outputfile = "matrix_" + args.area + "_" + model_details + ".txt"
+    outputfile = os.path.abspath(os.path.join(args.outputfolder, "matrix_" + args.area + "_" + model_details + ".txt"))
 
     f = open(outputfile, 'w')
 
