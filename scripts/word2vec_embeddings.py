@@ -21,11 +21,11 @@ from geol.geol_logger.geol_logger import logger
 from geol.utils.utils import select_category, normalize_words, pre_processing
 
 
-def run_w2v_model(outputfolder, word_list, skip_gram, prefix, strategy, size, count, window, plot):
+def run_w2v_model(outputfolder, word_list, skip_gram, prefix, size, count, window, plot):
     """
     Run Word2Vec model
     """
-    output = os.path.abspath(os.path.join(outputfolder, 'models', prefix + '_' + strategy + '_s'+str(size) +
+    output = os.path.abspath(os.path.join(outputfolder, 'models', prefix + '_s'+str(size) +
                                           '_ws'+str(window)+'_c'+str(count)+'.model'))
     model = gensim.models.Word2Vec(
         word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=8)  # size 5 is default
@@ -115,13 +115,6 @@ def main(argv):
                         default=[50],
                         type=int)
 
-    parser.add_argument('-st', '--strategy',
-                        help='Strategy to use: 1 (alphabetically, 2 (nearest), 3 (distance). Default 1.',
-                        action='store',
-                        dest='strategy',
-                        default=1,
-                        type=int)
-
     parser.add_argument('-ws', '--window_size)',
                         help='List of window sizes (s1, s2, ..), default = 50.',
                         dest='windows',
@@ -173,14 +166,14 @@ def main(argv):
                     if args.mp == True:
 
                         p = multiprocessing.Process(target=run_w2v_model, args=(
-                            args.outputfolder, word_list, args.skip_gram, args.prefix, args.strategy, size, count, window, args.plot))
+                            args.outputfolder, word_list, args.skip_gram, args.prefix size, count, window, args.plot))
 
                         jobs.append(p)
                         p.start()
 
                     else:
                         output = os.path.abspath(os.path.join(args.outputfolder, 'models', args.prefix +
-                                                              '_' + args.strategy + '_s' + str(size) + '_ws'+str(window)+'_c'+str(count)+'.model'))
+                                                              '_s' + str(size) + '_ws'+str(window)+'_c'+str(count)+'.model'))
                         run_w2v_model(output, word_list, args.skip_gram, size,
                                       count, window, args.plot)
 
