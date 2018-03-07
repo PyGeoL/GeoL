@@ -16,7 +16,7 @@ CITIES = ["barcelona","london","rome","milan","madrid","berlin","paris","stockho
 BASE_DIR = os.path.abspath(".")
 # base directory for data files
 BASE_DIR_DATA = os.path.join(BASE_DIR, "data")
-directoriesToBuild = ["grid"] #'clipped','mapped','grid','foursquare_raw','train','dev','test','count','landuse','embeddings','osm_raw]
+directoriesToBuild = ["words"] #'clipped','mapped','grid','foursquare_raw','train','dev','test','count','landuse','embeddings','osm_raw]
 
 # build folder structure for each city
 def makeDirStruct(city):
