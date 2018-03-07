@@ -79,7 +79,8 @@ def main(argv):
     if m:
         model_details = m.group(1)
 
-    outputfile = os.path.abspath(os.path.join(args.outputfolder, "matrix_" + args.area + "_" + model_details + ".txt"))
+    outputfile = os.path.abspath(os.path.join(
+        args.outputfolder, "matrix_" + args.area + "_" + model_details + ".txt"))
 
     f = open(outputfile, 'w')
 
@@ -88,7 +89,7 @@ def main(argv):
         word = utils.normalize_word(word)
 
         w = word.split(' ')
-        v = [0] * size
+        v = [0] * int(size)
 
         if len(w) > 1:
             tmp_w2v = []
