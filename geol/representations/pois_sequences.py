@@ -35,7 +35,8 @@ class POISequences():
         # Create GeoDataFrame from the read DataFrame
         logger.info("Create GeoDataFrame")
         geometry = [Point(xy) for xy in zip(df.longitude, df.latitude)]
-        gdf = gpd.GeoDataFrame(df, index=df.index, geometry=geometry, crs={'init': crs})
+        gdf = gpd.GeoDataFrame(
+            df, index=df.index, geometry=geometry, crs={'init': crs})
 
         return cls(gdf.to_crs({'init': constants.universal_crs}))
 
@@ -46,14 +47,15 @@ class POISequences():
 
         points = df[['categories', 'geometry']].copy()
 
-        s = [] #str(df.iloc[0]['categories']) + "\t"
+        s = []  # str(df.iloc[0]['categories']) + "\t"
         s.append(str(df.iloc[0]['categories']))
 
         p = df.iloc[0]['geometry']
         points = points[points.geometry != p]
 
         while (len(points) > 0):
-            nearest = points.geometry == nearest_points(p, points.geometry.unary_union)[1]
+            nearest = points.geometry == nearest_points(
+                p, points.geometry.unary_union)[1]
 
             p = points[nearest]['geometry'].iloc[0]
             s.append(points[nearest]['categories'].iloc[0])
@@ -67,11 +69,12 @@ class POISequences():
 
     def _distance(self, band_size=500):
 
-        wthresh = pysal.weights.DistanceBand.from_dataframe(self._pois, band_size, p=2, binary=False, ids=self._pois.index)
+        wthresh = pysal.weights.DistanceBand.from_dataframe(
+            self._pois, band_size, p=2, binary=False, ids=self._pois.index)
 
         ds = []
 
-        for index, indexes in wthresh.neighbors.iteritems():
+        for index, indexes in wthresh.neighbors.items():
 
             if len(indexes) == 0:
                 d = {}
@@ -95,7 +98,8 @@ class POISequences():
 
         df = self._distance(band_size)
 
-        df.sort_values(by=['observation', 'distance'], ascending=True, inplace=True)
+        df.sort_values(by=['observation', 'distance'],
+                       ascending=True, inplace=True)
 
         # Retrive observation/observed categories from the original dataframe
         tmp = df.merge(self._pois[['categories']], left_on='observed', right_index=True)\
@@ -105,7 +109,8 @@ class POISequences():
         tmp = tmp.groupby(['observation', 'categories_observation']).apply(
             lambda x: '\t'.join(x['categories_observed']) if len(x) > 2 else None).reset_index().dropna().rename(columns={0: "seq"})
 
-        tmp.loc[:, "complete"] = tmp['categories_observation'] + "\t" + tmp['seq']
+        tmp.loc[:, "complete"] = tmp['categories_observation'] + \
+            "\t" + tmp['seq']
 
         tmp['complete'].to_csv(outfile, index=False, header=None)
 
@@ -114,7 +119,7 @@ class POISequences():
         logger.info("Load the grid.")
         # Load inputgrid
         g = Grid.from_file(inputgrid)
-        grid = g.grid.to_crs({'init':constants.universal_crs})
+        grid = g.grid.to_crs({'init': constants.universal_crs})
         grid.loc[:, 'centroid'] = grid.centroid
 
         df = self._pois.copy()
@@ -122,16 +127,18 @@ class POISequences():
         df = df.merge(grid[['cellID', 'centroid']], on='cellID')
 
         logger.info("Compute centroid for cells.")
-        df.loc[:,'distance'] = df.apply(self._centroid_distance, axis=1)
+        df.loc[:, 'distance'] = df.apply(self._centroid_distance, axis=1)
         df.sort_values(by=['cellID', 'distance'], inplace=True, ascending=True)
 
         logger.info("Creating sequences.")
-        df.groupby('cellID').apply(self._nearest).dropna().to_csv(outfile, index=False, header=None)
+        df.groupby('cellID').apply(self._nearest).dropna().to_csv(
+            outfile, index=False, header=None)
 
     def alphabetically_sequence(self, outfile):
 
         if('cellID' not in self._pois.columns):
-            raise ValueError("The input file with POIs must contains the column cellID.")
+            raise ValueError(
+                "The input file with POIs must contains the column cellID.")
 
         self._pois.sort_values(by=["cellID", "name"]).groupby('cellID')\
             .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None)
