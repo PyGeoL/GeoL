@@ -14,6 +14,7 @@ from geol.geol_logger.geol_logger import logger
 import re
 import numpy as np
 
+
 def main(argv):
 
     parser = argparse.ArgumentParser('Build your own grid.')
@@ -58,14 +59,15 @@ def main(argv):
             format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
     logger.info("Loading w2v model.")
-    model = gensim.models.KeyedVectors.load_word2vec_format(args.inputfile, binary=False)
+
+    model = gensim.models.Word2Vec.load(args.inputfile, binary=False)
 
     tree = pd.read_csv(os.path.abspath("geol/resources/category_tree.csv"))
 
     words = tree['level1_name'].dropna().drop_duplicates().tolist() + \
-            tree['level2_name'].dropna().drop_duplicates().tolist() + \
-            tree['level3_name'].dropna().drop_duplicates().tolist() + \
-            tree['level4_name'].dropna().drop_duplicates().tolist()
+        tree['level2_name'].dropna().drop_duplicates().tolist() + \
+        tree['level3_name'].dropna().drop_duplicates().tolist() + \
+        tree['level4_name'].dropna().drop_duplicates().tolist()
 
     m = re.search('_s([0-9]+)_', args.inputfile)
     if m:
@@ -101,6 +103,7 @@ def main(argv):
         f.write(word.replace(" ", "_") + "::n" + "\t1.0\t0\t" + s + "\n")
 
     f.close()
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
