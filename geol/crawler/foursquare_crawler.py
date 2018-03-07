@@ -18,22 +18,27 @@ class Foursquare:
         self.cat = pd.read_csv(pkg_resources.resource_filename('geol', '/resources/category_tree.csv'), encoding="iso-8859-1")
         self.cat.set_index("cat", inplace=True)
 
-    def start(self, grid, output):
+    def start(self, grid, output, restart=None):
+
+        start_point = 0
 
         # Remove the file if it's already exists
-        try:
-            os.remove(output)
-        except OSError:
-            pass
+        if restart is None:
+            try:
+                os.remove(output)
+            except OSError:
+                pass
+        else:
+            start_point = restart
 
         # Initialize timer and requests counter
         tm = time.time()
         request_counter = 0
         foursquare_data = pd.DataFrame(columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
 
-        #TODO: manage the possibility to restart the crawler from the last interruption
+        logger.info("Calls to do: " + str(len(grid)-start_point))
 
-        for ind in range(0, len(grid)):
+        for ind in range(start_point, len(grid)):
 
             request_counter += 1
 
@@ -166,4 +171,8 @@ class Foursquare:
         else:
             foursquare_data.to_csv(output, encoding='utf-8', index=False)
 
-
+        # Sanity check and removing duplicates
+        logger.info("Sanity check and removing duplicates.")
+        df = pd.read_csv(output)
+        df.drop_duplicates(['name','latitude','longitude'], inplace=True)
+        df.to_csv(output, encoding='utf-8', index=False)

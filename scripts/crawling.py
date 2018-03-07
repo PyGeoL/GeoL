@@ -70,6 +70,13 @@ def main(argv):
                         default=None,
                         type=int)
 
+    parser.add_argument('-r', '--restart',
+                        help='Restarting point.',
+                        action='store',
+                        dest='restart',
+                        default=None,
+                        type=int)
+
     parser.add_argument('-b', '--base_shape', action='store',
                         help='Path to the shape file used as a base to build the grid over.',
                         dest='base_shape',
@@ -122,7 +129,7 @@ def main(argv):
     print(client_secret)
 
     c = foursquare_crawler.Foursquare(client_id=client_id, client_secret=client_secret)
-    c.start(grid.grid, outputfile)
+    c.start(grid.grid, outputfile, restart=args.restart)
 
 
 if __name__ == "__main__":

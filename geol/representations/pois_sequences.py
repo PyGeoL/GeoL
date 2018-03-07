@@ -103,7 +103,7 @@ class POISequences():
                    suffixes=['_observed', '_observation'])
 
         tmp = tmp.groupby(['observation', 'categories_observation']).apply(
-            lambda x: '\t'.join(x['categories_observed'] if len(x) > 2 else None)).dropna().rename(columns={0: "seq"})
+            lambda x: '\t'.join(x['categories_observed']) if len(x) > 2 else None).reset_index().dropna().rename(columns={0: "seq"})
 
         tmp.loc[:, "complete"] = tmp['categories_observation'] + "\t" + tmp['seq']
 
