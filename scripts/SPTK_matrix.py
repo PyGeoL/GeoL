@@ -78,8 +78,7 @@ def main(argv):
     if m:
         model_details = m.group(1)
 
-    outputfile = "matrix_" + args.area+
-    "_" + model_details + ".txt"
+    outputfile = "matrix_" + args.area + "_" + model_details + ".txt"
 
     f = open(outputfile, 'w')
 
