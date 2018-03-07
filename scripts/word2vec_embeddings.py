@@ -25,16 +25,16 @@ def run_w2v_model(outputfolder, word_list, skip_gram, prefix, strategy, size, co
     """
     Run Word2Vec model
     """
-    output = os.path.abspath(os.path.join(outputfolder, 'models', prefix + '_' + strategy + '_'+str(size) +
-                                          '_'+str(window)+'_'+str(count)+'.model'))
+    output = os.path.abspath(os.path.join(outputfolder, 'models', prefix + '_' + strategy + '_s'+str(size) +
+                                          '_ws'+str(window)+'_c'+str(count)+'.model'))
     model = gensim.models.Word2Vec(
         word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=8)  # size 5 is default
     model.save(output)
     if plot:
-        tsne_plot(model, size, window, count, outputfolder)
+        tsne_plot(model, size, window, count, outputfolder, prefix)
 
 
-def tsne_plot(model, size, window, count, outputfolder):
+def tsne_plot(model, size, window, count, outputfolder, prefix):
     """
     Creates and TSNE model and plots it
     """
@@ -66,8 +66,8 @@ def tsne_plot(model, size, window, count, outputfolder):
                      ha='right',
                      va='bottom')
     plt.title('Size:'+str(size)+' Window:'+str(window)+' Count:'+str(count))
-    plt.savefig(os.path.abspath(os.path.join(outputfolder, 'imgs', 'nearest_'+str(size)+'_' + str(window) +
-                                             '_'+str(count)+'.png')), bbox_inches='tight')
+    plt.savefig(os.path.abspath(os.path.join(outputfolder, 'imgs', prefix + '_s' + str(size)+'_ws' + str(window) +
+                                             '_c'+str(count)+'.png')), bbox_inches='tight')
     plt.show()
 
 
@@ -180,7 +180,7 @@ def main(argv):
 
                     else:
                         output = os.path.abspath(os.path.join(args.outputfolder, 'models', args.prefix +
-                                                              '_' + args.strategy + '_' + str(size) + '_'+str(window)+'_'+str(count)+'.model'))
+                                                              '_' + args.strategy + '_s' + str(size) + '_ws'+str(window)+'_c'+str(count)+'.model'))
                         run_w2v_model(output, word_list, args.skip_gram, size,
                                       count, window, args.plot)
 
