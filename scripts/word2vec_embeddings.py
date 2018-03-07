@@ -166,7 +166,7 @@ def main(argv):
                     if args.mp == True:
 
                         p = multiprocessing.Process(target=run_w2v_model, args=(
-                            args.outputfolder, word_list, args.skip_gram, args.prefix size, count, window, args.plot))
+                            args.outputfolder, word_list, args.skip_gram, args.prefix, size, count, window, args.plot))
 
                         jobs.append(p)
                         p.start()
