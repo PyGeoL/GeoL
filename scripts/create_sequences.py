@@ -105,7 +105,7 @@ def main(argv):
         logging.basicConfig(
             format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
-    sequences_generator = POISequences.from_csv(args.inputfile)
+    sequences_generator = POISequences.from_csv(args.inputfile, args.sep)
 
     if(args.strategy == 1):
         strStrategy = "alphabetically"
