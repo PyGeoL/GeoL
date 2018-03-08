@@ -61,7 +61,12 @@ def main(argv):
 
     logger.info("Loading w2v model.")
 
-    model = gensim.models.Word2Vec.load(args.inputfile)
+    model = None
+
+    if(args.inputfile.endswith(".biz")):
+        model = gensim.models.KeyedVectors.load_word2vec_format(args.inputfile, binary=True)
+    else:
+        model = gensim.models.Word2Vec.load(args.inputfile)
 
     tree = pd.read_csv(pkg_resources.resource_filename('geol', '/resources/category_tree.csv'),encoding='iso-8859-1')
 
