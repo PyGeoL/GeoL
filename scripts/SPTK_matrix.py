@@ -64,7 +64,7 @@ def main(argv):
     model = gensim.models.Word2Vec.load(args.inputfile)
 
     tree = pd.read_csv(pkg_resources.resource_filename(
-        'geol', '/resources/category_tree.csv'), encoding="iso-8859-1")
+        'geol', '/resources/category_tree.csv'), encoding="utf-8")
 
     words = tree['level1_name'].dropna().drop_duplicates().tolist() + \
         tree['level2_name'].dropna().drop_duplicates().tolist() + \
