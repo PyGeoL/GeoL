@@ -103,7 +103,7 @@ def main(argv):
                                 value="Transport", inplace=True)
 
     # take only gonalez's classes
-    admitted_classes = ['Water', 'Sports', 'HD', 'MD', 'LD',
+    admitted_classes = ['Sports', 'HD', 'MD', 'LD',
                         'Industrial', 'Green_Urban', 'Forests', 'Transport', 'Agri']
 
     # We are removing the NOT admitted classes after computing the predominant
