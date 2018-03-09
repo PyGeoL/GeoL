@@ -54,10 +54,12 @@ class Foursquare:
                 sl = int(3600 - difference_time + 10)
                 tm = 0
 
+                # Set type int and save
+                foursquare_data["checkin"] = foursquare_data["checkin"].astype(int)
+                foursquare_data["usercount"] = foursquare_data["usercount"].astype(int)
+
                 if (os.path.isfile(output)):
-                    with open(output, 'a') as f:
-                        foursquare_data.to_csv(f, header=False, index=False, encoding='utf-8')
-                    f.close()
+                    foursquare_data.to_csv(mode='a', header=False, index=False, encoding='utf-8')
                 else:
                     foursquare_data.to_csv(output, encoding='utf-8', index=False)
 
@@ -165,9 +167,8 @@ class Foursquare:
         foursquare_data["usercount"] = foursquare_data["usercount"].astype(int)
 
         if(os.path.isfile(output)):
-            with open(output, 'a') as f:
-                foursquare_data.to_csv(f, header=False,index=False, encoding='utf-8')
-            f.close()
+            foursquare_data.to_csv(mode='a', header=False,index=False, encoding='utf-8')
+
         else:
             foursquare_data.to_csv(output, encoding='utf-8', index=False)
 
