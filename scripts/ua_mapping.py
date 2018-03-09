@@ -121,7 +121,8 @@ def main(argv):
     x_scaled = min_max_scaler.fit_transform(reshaped_geom)
     landuse_admitted.loc[:, 'coverage'] = x_scaled
     (landuse_admitted.groupby(['ITEM2012']).sum() /
-     landuse_admitted['coverage'].sum()).plot(kind='bar')
+     landuse_admitted['coverage'].sum())
+    #  .plot(kind='bar')
 
     # Load Empty Grid
     grid = gpd.GeoDataFrame.from_file(grid_inputfile)
