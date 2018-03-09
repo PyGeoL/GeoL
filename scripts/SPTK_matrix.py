@@ -12,7 +12,8 @@ import gensim
 import pkg_resources
 from geol.geol_logger.geol_logger import logger
 from geol.utils import utils
-import re, os
+import re
+import os
 import numpy as np
 
 
