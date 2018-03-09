@@ -23,13 +23,13 @@ def main(argv):
             argv, "hg:d:o:n:", ["grid=", "dataset=", "outputfile=", "names="])
 
     except getopt.GetoptError:
-        print (
+        print(
             'script.py -g <grid> -d <dataset> -o <outputfile> ')
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
-            print (
+            print(
                 'script.py -g <grid> -d <dataset> -o <outputfile>')
             sys.exit()
         elif opt in ("-g", "--grid"):
@@ -44,66 +44,72 @@ def main(argv):
 
     # fill NaN
     landuse["ITEM2012"] = landuse["ITEM2012"].fillna('Undefined')
-    
+
     # rename classes akin to gonzalez's
 
     # HD
     landuse["ITEM2012"].replace(to_replace="Continuous urban fabric (S.L. : > 80%)",
                                 value="HD", inplace=True)
-    landuse["ITEM2012"].replace(to_replace="Discontinuous dense urban fabric (S.L. : 50% -  80%)",    
+    landuse["ITEM2012"].replace(to_replace="Discontinuous dense urban fabric (S.L. : 50% -  80%)",
                                 value="HD", inplace=True)
     # MD
     landuse["ITEM2012"].replace(to_replace="Discontinuous medium density urban fabric (S.L. : 30% - 50%)",
                                 value="MD", inplace=True)
-    
+
     # LD
     landuse["ITEM2012"].replace(to_replace="Discontinuous low density urban fabric (S.L. : 10% - 30%)",
-                                value="LD", inplace=True)    
+                                value="LD", inplace=True)
     landuse["ITEM2012"].replace(to_replace="Discontinuous very low density urban fabric (S.L. : < 10%)",
                                 value="LD", inplace=True)
-    
+
     # Agri
     landuse["ITEM2012"].replace(to_replace="Arable land (annual crops)",
                                 value="Agri", inplace=True)
     landuse["ITEM2012"].replace(to_replace="Permanent crops (vineyards, fruit trees, olive groves)",
                                 value="Agri", inplace=True)
-    landuse["ITEM2012"].replace(to_replace="Pastures", value="Agri", inplace=True)
-    landuse["ITEM2012"].replace(to_replace="Complex and mixed cultivation patterns", value="Agri", inplace=True)        
-    landuse["ITEM2012"].replace(to_replace="Orchads", value="Agri", inplace=True)
-    landuse["ITEM2012"].replace(to_replace="Wetlands", value="Agri", inplace=True)    
+    landuse["ITEM2012"].replace(
+        to_replace="Pastures", value="Agri", inplace=True)
+    landuse["ITEM2012"].replace(
+        to_replace="Complex and mixed cultivation patterns", value="Agri", inplace=True)
+    landuse["ITEM2012"].replace(
+        to_replace="Orchads", value="Agri", inplace=True)
+    landuse["ITEM2012"].replace(
+        to_replace="Wetlands", value="Agri", inplace=True)
     landuse["ITEM2012"].replace(to_replace="Open spaces with little or no vegetation (beaches, dunes, bare rocks, glaciers)",
                                 value="Agri", inplace=True)
     landuse["ITEM2012"].replace(to_replace="Herbaceous vegetation associations (natural grassland, moors...)",
                                 value="Agri", inplace=True)
-    # SPORTS     
+    # SPORTS
     landuse["ITEM2012"].replace(to_replace="Sports and leisure facilities",
                                 value="Sports", inplace=True)
     # INDUSTRIAL
     landuse["ITEM2012"].replace(to_replace="Industrial, commercial, public, military and private units",
                                 value="Industrial", inplace=True)
-    
+
     # GrEEN URBAN
     landuse["ITEM2012"].replace(to_replace="Green urban areas",
-                            value="Green_Urban", inplace=True)
+                                value="Green_Urban", inplace=True)
 
     #     Transport
     landuse["ITEM2012"].replace(to_replace="Fast transit roads and associated land",
                                 value="Transport", inplace=True)
     landuse["ITEM2012"].replace(to_replace="Other roads and associated land",
-                                    value="Transport", inplace=True)
+                                value="Transport", inplace=True)
     landuse["ITEM2012"].replace(to_replace="Railways and associated land",
-                                    value="Transport", inplace=True)
+                                value="Transport", inplace=True)
     landuse["ITEM2012"].replace(to_replace="Port areas",
-                                    value="Transport", inplace=True)
+                                value="Transport", inplace=True)
     landuse["ITEM2012"].replace(to_replace="Airports",
-                                    value="Transport", inplace=True)   
-    
+                                value="Transport", inplace=True)
 
     # take only gonalez's classes
-    admitted_classes = ['Water', 'Sports', 'HD', 'MD', 'LD','Industrial', 'Green_Urban', 'Forests', 'Transport', 'Agri']
-    
-    landuse_admitted = landuse[landuse['ITEM2012'].isin(admitted_classes)]
-    landuse_admitted = landuse_admitted.to_crs({'init': 'epsg:3857'})[
+    admitted_classes = ['Water', 'Sports', 'HD', 'MD', 'LD',
+                        'Industrial', 'Green_Urban', 'Forests', 'Transport', 'Agri']
+
+    # We are removing the NOT admitted classes after computing the predominant
+    # landuse_admitted = landuse[landuse['ITEM2012'].isin(admitted_classes)]
+
+    landuse_admitted = landuse.to_crs({'init': 'epsg:3857'})[
         ['ITEM2012', 'geometry']]
     # drona
     landuse_admitted.dropna(inplace=True)
@@ -175,7 +181,7 @@ def main(argv):
     r.fillna(0, inplace=True)
     r.loc[:, "predominant"] = r[lu_col].idxmax(axis=1)
 
-    # Filter out cell with predominant with less than 0.25
+    # Filter out cell where predominant is more than 0.25 of total area in the cell
     r.loc[:, "valid"] = r.apply(
         lambda x: 1 if x[x['predominant']] > 0.25 else 0, axis=1)
 
@@ -183,7 +189,10 @@ def main(argv):
     r_valid = r[r["valid"] != 0]
     print(r_valid.drop_duplicates("predominant"))
     print(len(r_valid.drop_duplicates("predominant")))
-    
+
+    # select solo cell in admitted classes
+    r_valid = r_valid[r_valid['predominant'].isin(admitted_classes)]
+
     # INFINE, SCRIVO IL FILE
     r_valid.to_csv(outputfile, index=False, quoting=csv.QUOTE_NONNUMERIC)
     check_statistics = """
