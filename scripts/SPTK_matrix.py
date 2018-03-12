@@ -89,7 +89,7 @@ def main(argv):
 
     m = re.search('_s([0-9]+)_', args.inputfile)
 
-    if size:
+    if args.size:
         size = args.size
     else:
         if m:
