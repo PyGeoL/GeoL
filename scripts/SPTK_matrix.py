@@ -91,8 +91,8 @@ def main(argv):
     else:
         model_details = 'gnews'
 
-    outputfile = os.path.abspath(os.path.join(
-        args.outputfolder, "matrix_" + args.area + "_" + model_details + ".txt"))
+        outputfile = os.path.abspath(os.path.join(
+            args.outputfolder, "matrix_" + args.area + "_" + model_details + ".txt"))
 
     f = open(outputfile, 'w', encoding='utf-8')
 
