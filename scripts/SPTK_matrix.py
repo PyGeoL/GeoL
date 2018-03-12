@@ -42,6 +42,13 @@ def main(argv):
                         default=None,
                         type=str)
 
+    parser.add_argument('-s', '--size',
+                        action='store',
+                        dest='size',
+                        help='Word2Vec words size. Used when employing Google News model.',
+                        default=None,
+                        type=str)
+
     parser.add_argument('-v', '--verbose',
                         help='Level of output verbosity.',
                         action='store',
@@ -81,18 +88,22 @@ def main(argv):
         tree['level4_name'].dropna().drop_duplicates().tolist()
 
     m = re.search('_s([0-9]+)_', args.inputfile)
-    if m:
-        size = m.group(1)
 
-    m = re.search('.+/(.+).model', args.inputfile)
-
-    if m:
-        model_details = m.group(1)
+    if size:
+        size = args.size
     else:
-        model_details = 'gnews'
+        if m:
+            size = m.group(1)
 
-        outputfile = os.path.abspath(os.path.join(
-            args.outputfolder, "matrix_" + args.area + "_" + model_details + ".txt"))
+        m = re.search('.+/(.+).model', args.inputfile)
+
+        if m:
+            model_details = m.group(1)
+        else:
+            model_details = 'gnews'
+
+            outputfile = os.path.abspath(os.path.join(
+                args.outputfolder, "matrix_" + args.area + "_" + model_details + ".txt"))
 
     f = open(outputfile, 'w', encoding='utf-8')
 
