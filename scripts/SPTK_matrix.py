@@ -95,12 +95,12 @@ def main(argv):
         if m:
             size = m.group(1)
 
-        m = re.search('.+/(.+).model', args.inputfile)
+    m = re.search('.+/(.+).model', args.inputfile)
 
-        if m:
-            model_details = m.group(1)
-        else:
-            model_details = 'gnews'
+    if m:
+        model_details = m.group(1)
+    else:
+        model_details = 'gnews'
 
     outputfile = os.path.abspath(os.path.join(
         args.outputfolder, "matrix_" + args.area + "_" + model_details + ".txt"))
