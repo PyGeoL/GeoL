@@ -309,7 +309,7 @@ def modelfit(alg, X, y, useTrainCV=True, cv_folds=5, early_stopping_rounds=50, v
 def tune(X, y, param_test, verbose=0, learning_rate=0.1, n_estimators=140, max_depth=5, min_child_weight=1, gamma=0, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=1, reg_alpha=0, seed=28, cv=5):
 
     gsearch = GridSearchCV(
-        estimator=XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators, silent=True, objective='multi:softmax', booster='gbtree', n_jobs=1, nthread=1, gamma=gamma, min_child_weight=min_child_weight,
+        estimator=XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators, silent=True, objective='multi:softmax', num_class=9, booster='gbtree', n_jobs=1, nthread=1, gamma=gamma, min_child_weight=min_child_weight,
                                 max_delta_step=0, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bylevel=1, reg_alpha=reg_alpha, reg_lambda=1, scale_pos_weight=scale_pos_weight, base_score=0.5, random_state=0, seed=seed, missing=None),
         param_grid=param_test,
         scoring='f1',
@@ -331,6 +331,7 @@ def test_param(params, X_train, y_train, X_test, y_test, seed, verbose=True):
     # Costruisco un modello con i parametri specificati
     xgb1 = XGBClassifier(
         objective='multi:softmax',
+        num_class=9,
         seed=seed)
     xgb1.set_params(**params)
 
