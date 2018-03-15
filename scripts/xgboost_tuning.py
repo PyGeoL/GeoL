@@ -35,7 +35,7 @@ sns.set_context("paper")
 
 
 import xgboost as xgb
-from xgboost.sklearn import XGBRegressor
+from xgboost.sklearn import XGBClassifier
 
 import sklearn
 from sklearn.model_selection import train_test_split
@@ -309,14 +309,10 @@ def modelfit(alg, X, y, useTrainCV=True, cv_folds=5, early_stopping_rounds=50, v
 def tune(X, y, param_test, verbose=0, learning_rate=0.1, n_estimators=140, max_depth=5, min_child_weight=1, gamma=0, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=1, reg_alpha=0, seed=28, cv=5):
 
     gsearch = GridSearchCV(
-        estimator=XGBRegressor(learning_rate=learning_rate, n_estimators=n_estimators,
-                               max_depth=max_depth, min_child_weight=min_child_weight, reg_alpha=reg_alpha,
-                               gamma=gamma, subsample=subsample, colsample_bytree=colsample_bytree,
-                               objective='TODO cambiar in classificatore', scale_pos_weight=scale_pos_weight, nthread=1,
-                               seed=seed),
+        estimator=XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators, silent=True, objective='binary:logistic', booster='gbtree', n_jobs=1, nthread=1, gamma=gamma, min_child_weight=min_child_weight,
+                                max_delta_step=0, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bylevel=1, reg_alpha=reg_alpha, reg_lambda=1, scale_pos_weight=scale_pos_weight, base_score=0.5, random_state=0, seed=seed, missing=None, **kwargs),
         param_grid=param_test,
-        # TODO ANCHE questo da cambiar in F1 score
-        scoring='neg_mean_squared_error',
+        scoring='f1',
         n_jobs=2,
         iid=False,
         cv=cv,
@@ -333,8 +329,8 @@ def evaluate(alg, X_test, y_test):
 
 def test_param(params, X_train, y_train, X_test, y_test, seed, verbose=True):
     # Costruisco un modello con i parametri specificati
-    xgb1 = XGBRegressor(
-        objective='reg:logistic',
+    xgb1 = XGBClassifier(
+        objective='binary:logistic',
         seed=seed)
     xgb1.set_params(**params)
 
@@ -523,18 +519,13 @@ def build_model(X_train, y_train, X_test, y_test, seed, verbose=1):
     return params, tuning, testing
 
 
-
-
 def tuning_main_steps(df_ua_fs, CITY_NAME,  SIZE1,
                       BASE_DIR_CITY, SIZE2,  METRIC, S, WS, C):
 
-
-
-    
     print('\tStarting ')
 
-
-    X_train, y_train, X_test, y_test = split_train_test_for_tuning(BASE_DIR_CITY, df_ua_fs, CITY_NAME, SIZE1, METRIC, S,WS, C)
+    X_train, y_train, X_test, y_test = split_train_test_for_tuning(
+        BASE_DIR_CITY, df_ua_fs, CITY_NAME, SIZE1, METRIC, S, WS, C)
 
     params, tuning, testing = build_model(
         X_train, y_train, X_test, y_test, 27, verbose=1)
