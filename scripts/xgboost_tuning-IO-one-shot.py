@@ -122,9 +122,9 @@ def split_train_test_from_file(BASE_DIR_CITY, CITY_NAME, SIZE, METRIC, S, WS, C)
 
     # df_ua_fs.dropna(inplace=True)
     df_X_train = df_feat[[
-        x for x in df_feat.columns if x.startswith('f_')]+['cellID']]
+        x for x in df_feat.columns if x.startswith('f_')]]
     df_X_test = df_target[[
-        x for x in df_target.columns if x.startswith('f_')]+['cellID']]
+        x for x in df_target.columns if x.startswith('f_')]]
     df_y_train = df_feat[[
         x for x in df_feat.columns if x.startswith('t_')]]
     df_y_test = df_target[[
