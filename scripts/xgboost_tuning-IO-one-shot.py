@@ -117,8 +117,8 @@ def split_train_test_from_file(BASE_DIR_CITY, CITY_NAME, SIZE, METRIC, S, WS, C)
     OUTPUT_TRAIN, OUTPUT_TEST = [os.path.join(BASE_DIR_CITY, STEP, CITY_NAME + "_fs_" + str(SIZE) + "_skip_" + METRIC+"_" + str(
         SIZE) + "_s" + str(S) + "_ws" + str(WS) + "_c" + str(C) + ".csv") for STEP in ["train", "test"]]
     print(OUTPUT_TRAIN, OUTPUT_TEST)
-    df_feat = pd.read_csv(OUTPUT_TRAIN, sep='\t', nrows=500)
-    df_target = pd.read_csv(OUTPUT_TEST, sep='\t', nrows=500)
+    df_feat = pd.read_csv(OUTPUT_TRAIN, sep='\t')
+    df_target = pd.read_csv(OUTPUT_TEST, sep='\t')
 
     # df_ua_fs.dropna(inplace=True)
     df_X_train = df_feat[[
