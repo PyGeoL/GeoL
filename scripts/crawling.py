@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+sys.path.append("../GeoL")
 import logging
 import os
 from geol.utils import utils
@@ -12,6 +13,7 @@ os.environ['NO_PROXY'] = "nominatim.openstreetmap.org"
 
 logger = logging.getLogger(__name__)
 
+
 def write_grid(output, size, window_size, crs,
                area_name, base_shape):
     """
@@ -21,15 +23,19 @@ def write_grid(output, size, window_size, crs,
         grid = None
 
         if base_shape is not None:
-            grid = SquareGrid.from_file(base_shape, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_file(
+                base_shape, meters=size, window_size=window_size, grid_crs=crs)
         else:
-            grid = SquareGrid.from_name(area_name, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_name(
+                area_name, meters=size, window_size=window_size, grid_crs=crs)
 
     except:
-        logger.error("Error in creating tessellation " + output, exc_info=True)
+        logger.error("Error in creating tessellation " +
+                     output, exc_info=True)
         sys.exit(0)
 
     return grid
+
 
 def main(argv):
 
@@ -90,11 +96,11 @@ def main(argv):
                         type=int)
 
     parser.add_argument('-an', '--accountNumber',
-                       action='store',
-                       dest='account_number',
-                       help='Foursquare account number',
-                       default="1",
-                       type=str)
+                        action='store',
+                        dest='account_number',
+                        help='Foursquare account number',
+                        default="1",
+                        type=str)
 
     parser.add_argument('-v', '--verbose',
                         help='Level of output verbosity.',
@@ -103,24 +109,29 @@ def main(argv):
                         default=0,
                         type=int,
                         nargs="?")
-    
 
     args = parser.parse_args()
 
-    foursquare_keys = utils.read_foursqaure_keys("resources/foursquare_keys.json")
+    foursquare_keys = utils.read_foursqaure_keys(
+        "resources/foursquare_keys.json")
 
-    output = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_foursquare_pois.csv"))
+    output = os.path.abspath(os.path.join(
+        args.outputfolder, args.prefix + "_foursquare_pois.csv"))
 
     if (args.verbosity == 1):
-        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+        logging.basicConfig(
+            format='%(levelname)s: %(message)s', level=logging.INFO)
 
     elif (args.verbosity == 2):
-        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+        logging.basicConfig(
+            format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
     # Crete the tessellation if not passed in input. By default we use a square tessellation.
-    grid = write_grid(output, args.size, args.window_size, "epsg:4326", args.area_name, args.base_shape)
+    grid = write_grid(output, args.size, args.window_size,
+                      "epsg:4326", args.area_name, args.base_shape)
 
-    outputfile = os.path.join(args.outputfolder, args.prefix + "_foursquare_poi.csv")
+    outputfile = os.path.join(
+        args.outputfolder, args.prefix + "_foursquare_poi.csv")
 
     client_id = foursquare_keys[args.account_number]['CLIENT_ID']
     client_secret = foursquare_keys[args.account_number]['FOURSQUARE_API_TOKEN']
@@ -128,7 +139,8 @@ def main(argv):
     print(client_id)
     print(client_secret)
 
-    c = foursquare_crawler.Foursquare(client_id=client_id, client_secret=client_secret)
+    c = foursquare_crawler.Foursquare(
+        client_id=client_id, client_secret=client_secret)
     c.start(grid.grid, outputfile, restart=args.restart)
 
 
