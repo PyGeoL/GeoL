@@ -159,7 +159,7 @@ class Foursquare:
 
         start_point = 0
 
-        # Remove the file if it's already exists
+        # Remove the file if it already exists
         if restart is None:
             try:
                 os.remove(output)
