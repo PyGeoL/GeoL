@@ -3,6 +3,7 @@ import pandas as pd
 import time
 import pkg_resources
 import os
+import foursquare
 from geol.geol_logger.geol_logger import logger
 from geol.utils import constants
 
@@ -22,6 +23,9 @@ class Foursquare:
 
     def start(self, grid, output, restart=None):
 
+        # Initalize Foursquare client authentication
+        fs_client = foursquare.Foursquare(self.client_id, self.client_secret)
+
         start_point = 0
 
         # Remove the file if it already exists
@@ -34,8 +38,9 @@ class Foursquare:
             start_point = restart
 
         # Initialize timer and requests counter
-        tm = time.time()
+        #tm = time.time()
         request_counter = 0
+
         # Build dataframe
         foursquare_data = pd.DataFrame(
             columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
@@ -47,43 +52,7 @@ class Foursquare:
 
             request_counter += 1
 
-            #  Time check: Stop 120seconds before an hour OR at 4000 requests until the end of the hour
-            # TODO: Critical point! Check we are not exceeding the rate limit.
-            # Maybe it's a good idea to rewrite the calls using https://github.com/mLewisLogic/foursquare/
-            # so we can leverage  RateLimitExceeded()
-            ctm = time.time()
-            difference_time = ctm - tm
-
             logger.info("# Requests " + str(request_counter))
-
-            if((difference_time > constants.time_limit) or (((request_counter % constants.max_request_per_hour) == 0) & (request_counter > 0))):
-                logger.info("wait", (3600 - difference_time))
-                # differenza di tempo, senno aspetta
-                sl = int(3600 - difference_time + 10)
-                tm = 0
-
-                # Set type int and save
-                foursquare_data["checkin"] = foursquare_data["checkin"].astype(
-                    int)
-                foursquare_data["usercount"] = foursquare_data["usercount"].astype(
-                    int)
-
-                # append whatever data we got so far to the filesystem
-                if (os.path.isfile(output)):
-                    foursquare_data.to_csv(
-                        mode='a', header=False, index=False, encoding='utf-8')
-                else:
-                    foursquare_data.to_csv(
-                        output, encoding='utf-8', index=False)
-
-                # Reset POIs
-                # "Flush" the dataframe, so it can save the new batch of Points Of Interest
-                foursquare_data = pd.DataFrame(
-                    columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
-
-                time.sleep(sl)
-                tm = time.time()
-                request_counter = 0
 
             # Set bounding box for the request
             row = grid.iloc[ind]
@@ -110,75 +79,123 @@ class Foursquare:
 
             logger.info(url)
 
-            try:
+            call_flag = False
 
-                data = requests.get(url=url, params=params).json()
+            while (call_flag == False):
 
-            except Exception as exc:
-                logger.error("ERROR: {0}".format(exc))
+                try:
+                    data = fs_client.venues.search(params)
+                    call_flag = True
+                except foursquare.RateLimitExceeded as rle:
+                    # Time check
+                    #ctm = time.time()
+                    #difference_time = ctm - tm
+                    waiting_time = 3600
+
+                    logger.info("wait", waiting_time)
+
+                    # Set type int and save
+                    foursquare_data["checkin"] = foursquare_data["checkin"].astype(int)
+                    foursquare_data["usercount"] = foursquare_data["usercount"].astype(int)
+
+                    # append whatever data we got so far to the filesystem
+                    if (os.path.isfile(output)):
+                        foursquare_data.to_csv(
+                            mode='a', header=False, index=False, encoding='utf-8')
+                    else:
+                        foursquare_data.to_csv(
+                            output, encoding='utf-8', index=False)
+
+                    # Reset POIs
+                    # "Flush" the dataframe, so it can save the new batch of Points Of Interest
+                    foursquare_data = pd.DataFrame(
+                        columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
+
+                    time.sleep(waiting_time)
+                    #tm = time.time()
+                    #request_counter = 0
+                except Exception as exc:
+                    logger.error("ERROR: {0}".format(exc))
+
 
             # ----------- end request ---------------------
 
-            logger.debug(data)
+            tot = data['venues']
+            print(len(tot))
 
-            # If request fails...
-            # TODO: Critical point!
-            # Why we end up here? If so investigate why we pass the threshold
-            if(('code' in data['meta']) & (data['meta']['code'] == 403)):
-                logger.info("Wait")
-                # If we exceed the threshold wait for 2 hours.
-                # Check if this makes sense, or if there's a better way to handle the request (e.g. throttling...)
-                time.sleep(7500)
-                tm = time.time()
+            # Iterate over venues
+            for glob in range(0, len(tot)):
+                current_cat = data['venues'][glob]['categories']
+                if len(current_cat) == 0:
+                    continue
 
-            # If request succeeds...
-            if (('response' in data) & ('venues' in data['response'])):
-                tot = data['response']['venues']
+                checkin = data['venues'][glob]['stats']['checkinsCount']
+                user = data['venues'][glob]['stats']['usersCount']
+                name = data['venues'][glob]['name']
+                current_loc = data['venues'][glob]['location']
+                lat = current_loc['lat']
+                lon = current_loc['lng']
 
-                # Iterate over venues
-                for glob in range(0, len(tot)):
-                    current_cat = data['response']['venues'][glob]['categories']
-                    if len(current_cat) == 0:
-                        continue
+                # Check presence of address and cross street
+                if 'address' not in current_loc:
+                    address = ""
+                else:
+                    address = current_loc['address']
+                if 'crossStreet' not in current_loc:
+                    crossStreet = ""
+                else:
+                    crossStreet = current_loc['crossStreet']
 
-                    checkin = data['response']['venues'][glob]['stats']['checkinsCount']
-                    user = data['response']['venues'][glob]['stats']['usersCount']
-                    name = data['response']['venues'][glob]['name']
-                    current_loc = data['response']['venues'][glob]['location']
-                    lat = current_loc['lat']
-                    lon = current_loc['lng']
+                # Get categories
+                if ('pluralName' in current_cat[0]):
+                    current_cat = current_cat[0]['pluralName']
+                else:
+                    current_cat = current_cat[0]['name']
 
-                    # Check presence of address and cross street
-                    if 'address' not in current_loc:
-                        address = ""
-                    else:
-                        address = current_loc['address']
-                    if 'crossStreet' not in current_loc:
-                        crossStreet = ""
-                    else:
-                        crossStreet = current_loc['crossStreet']
+                if current_cat not in self.cat.index:
+                    continue
 
-                    # Get categories
-                    if ('pluralName' in current_cat[0]):
-                        current_cat = current_cat[0]['pluralName']
-                    else:
-                        current_cat = current_cat[0]['name']
+                cat_name = [self.cat.loc[current_cat][e] for e in self.cat.loc[current_cat].index if e.endswith(
+                    'name') and self.cat.loc[current_cat][e] != "-"]
 
-                    if current_cat not in self.cat.index:
-                        continue
+                # append date
+                foursquare_data = foursquare_data.append({"name": name,
+                                                          "address": address,
+                                                          "crossStreet": crossStreet,
+                                                          "categories": ':'.join(cat_name),
+                                                          "checkin": checkin,
+                                                          "usercount": user,
+                                                          "latitude": lat,
+                                                          "longitude": lon}, ignore_index=True)
 
-                    cat_name = [self.cat.loc[current_cat][e] for e in self.cat.loc[current_cat].index if e.endswith(
-                        'name') and self.cat.loc[current_cat][e] != "-"]
+            if (int(fs_client.rate_remaining) <= 0 and int(fs_client.rate_limit) > 0):
+                # Time check
+                #ctm = time.time()
+                #difference_time = ctm - tm
+                waiting_time = 3600
 
-                    # append date
-                    foursquare_data = foursquare_data.append({"name": name,
-                                                              "address": address,
-                                                              "crossStreet": crossStreet,
-                                                              "categories": ':'.join(cat_name),
-                                                              "checkin": checkin,
-                                                              "usercount": user,
-                                                              "latitude": lat,
-                                                              "longitude": lon}, ignore_index=True)
+                logger.info("wait", waiting_time)
+
+                # Set type int and save
+                foursquare_data["checkin"] = foursquare_data["checkin"].astype(int)
+                foursquare_data["usercount"] = foursquare_data["usercount"].astype(int)
+
+                # append whatever data we got so far to the filesystem
+                if (os.path.isfile(output)):
+                    foursquare_data.to_csv(
+                        mode='a', header=False, index=False, encoding='utf-8')
+                else:
+                    foursquare_data.to_csv(
+                        output, encoding='utf-8', index=False)
+
+                # Reset POIs
+                # "Flush" the dataframe, so it can save the new batch of Points Of Interest
+                foursquare_data = pd.DataFrame(
+                    columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
+
+                time.sleep(waiting_time)
+                #tm = time.time()
+                #request_counter = 0
 
         # Set type int and save
         foursquare_data["checkin"] = foursquare_data["checkin"].astype(int)
@@ -197,3 +214,6 @@ class Foursquare:
         df = pd.read_csv(output)
         df.drop_duplicates(['name', 'latitude', 'longitude'], inplace=True)
         df.to_csv(output, encoding='utf-8', index=False)
+
+
+
