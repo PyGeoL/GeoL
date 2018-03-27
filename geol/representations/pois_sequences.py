@@ -30,7 +30,7 @@ class POISequences():
         """
         #  Read foursquare MAPPED onto the grid
         logger.info("Reading POIs dataset.")
-        df = pd.read_csv(inputfile, sep=sep)
+        df = pd.read_csv(inputfile, sep=sep, nrows=400)
 
         # Create GeoDataFrame from the read DataFrame
         logger.info("Create GeoDataFrame")
@@ -112,7 +112,8 @@ class POISequences():
         tmp.loc[:, "complete"] = tmp['categories_observation'] + \
             "\t" + tmp['seq']
 
-        tmp['complete'].to_csv(outfile, index=False, header=None)
+        return tmp['complete']
+        # .to_csv(outfile, index=False, header=None)
 
     def nearest_based_sequence(self, outfile, inputgrid):
 
@@ -131,8 +132,8 @@ class POISequences():
         df.sort_values(by=['cellID', 'distance'], inplace=True, ascending=True)
 
         logger.info("Creating sequences.")
-        df.groupby('cellID').apply(self._nearest).dropna().to_csv(
-            outfile, index=False, header=None)
+        return df.groupby('cellID').apply(self._nearest).dropna()
+        # .to_csv(outfile, index=False, header=None)
 
     def alphabetically_sequence(self, outfile):
 
@@ -140,5 +141,7 @@ class POISequences():
             raise ValueError(
                 "The input file with POIs must contains the column cellID.")
 
-        self._pois.sort_values(by=["cellID", "name"]).groupby('cellID')\
-            .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None)
+        return self._pois.sort_values(by=["cellID", "categories"]).groupby('cellID')\
+            .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna()
+
+        # .to_csv(outfile, index=False, header=None)
