@@ -88,8 +88,8 @@ class Foursquare:
                     call_flag = True
                 except foursquare.RateLimitExceeded as rle:
                     # Time check
-                    ctm = time.time()
-                    difference_time = ctm - tm
+                    #ctm = time.time()
+                    #difference_time = ctm - tm
                     waiting_time = 3600
 
                     logger.info("wait", waiting_time)
@@ -112,8 +112,8 @@ class Foursquare:
                         columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
 
                     time.sleep(waiting_time)
-                    tm = time.time()
-                    request_counter = 0
+                    #tm = time.time()
+                    #request_counter = 0
                 except Exception as exc:
                     logger.error("ERROR: {0}".format(exc))
 
@@ -121,6 +121,7 @@ class Foursquare:
             # ----------- end request ---------------------
 
             tot = data['venues']
+            print(len(tot))
 
             # Iterate over venues
             for glob in range(0, len(tot)):
@@ -168,11 +169,9 @@ class Foursquare:
                                                           "longitude": lon}, ignore_index=True)
 
             if (int(fs_client.rate_remaining) <= 0 and int(fs_client.rate_limit) > 0):
-                print(request_counter, fs_client.rate_limit, fs_client.rate_remaining)
-
                 # Time check
-                ctm = time.time()
-                difference_time = ctm - tm
+                #ctm = time.time()
+                #difference_time = ctm - tm
                 waiting_time = 3600
 
                 logger.info("wait", waiting_time)
@@ -195,8 +194,8 @@ class Foursquare:
                     columns=["name", "address", "crossStreet", "categories", "checkin", "usercount"])
 
                 time.sleep(waiting_time)
-                tm = time.time()
-                request_counter = 0
+                #tm = time.time()
+                #request_counter = 0
 
         # Set type int and save
         foursquare_data["checkin"] = foursquare_data["checkin"].astype(int)
