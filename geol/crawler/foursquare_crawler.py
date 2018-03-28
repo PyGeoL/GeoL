@@ -21,8 +21,7 @@ class Foursquare:
 
     #TODO: add base class for generic crawler
 
-    def __init__(self, client_id="",
-                 client_secret=""):
+    def __init__(self, client_id="", client_secret=""):
 
         self.client_id = client_id
         self.client_secret = client_secret
@@ -50,7 +49,7 @@ class Foursquare:
 
         # append whatever data we got so far to the filesystem
         if os.path.isfile(self.output):
-            self.foursquare_data.to_csv(mode='a', header=False, index=False, encoding='utf-8')
+            self.foursquare_data.to_csv(self.output, mode='a', header=False, index=False, encoding='utf-8')
         else:
             self.foursquare_data.to_csv(self.output, encoding='utf-8', index=False)
 

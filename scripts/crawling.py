@@ -12,7 +12,6 @@ os.environ['NO_PROXY'] = "nominatim.openstreetmap.org"
 
 logger = logging.getLogger(__name__)
 
-
 def write_grid(output, size, window_size, crs, area_name, base_shape):
 
     # Create the tessellation and save into the outputfolder.
@@ -107,8 +106,7 @@ def main(argv):
     args = parser.parse_args()
 
     # Get foursquare key from key's file.
-    foursquare_keys = utils.read_foursqaure_keys("resources/foursquare_keys.json")
-
+    foursquare_keys = utils.read_foursqaure_keys(args.keys)
 
     outputfile = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_foursquare_pois.csv"))
 
