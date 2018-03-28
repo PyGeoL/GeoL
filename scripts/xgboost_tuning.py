@@ -6,6 +6,7 @@ Script to create word2vec models, given a set of mapped POIs.
 
 import argparse
 import os
+import math
 import errno
 import pandas as pd
 import geopandas as gpd
@@ -62,8 +63,8 @@ import csv
 
 def mergeUA_CellVector(BASE_DIR_CITY, CITY_NAME, SIZE1, METRIC, SIZE2, S, WS, C):
     """
-    Given a city name and a grid size, 
-    returns a DataFrame joning Cell Vectors and Urban Atlas data 
+    Given a city name and a grid size,
+    returns a DataFrame joning Cell Vectors and Urban Atlas data
     """
     if METRIC == 'distance':
             # input Cell Vectors data mapped to grid
@@ -115,17 +116,20 @@ def split_train_test_for_tuning(BASE_DIR_CITY, df_ua_fs, CITY_NAME, SIZE, METRIC
     # output UA data mapped to grid
     OUTPUT_TRAIN, OUTPUT_TEST = [os.path.join(BASE_DIR_CITY, STEP, CITY_NAME + "_fs_" + str(SIZE) + "_skip_" + METRIC+"_" + str(
         SIZE) + "_s" + str(S) + "_ws" + str(WS) + "_c" + str(C) + ".csv") for STEP in ["train", "test"]]
-    OUTPUT_TRAIN_SCALED = '_scaled_.'.join(OUTPUT_TRAIN.split('.'))
-    OUTPUT_TEST_SCALED = '_scaled_.'.join(OUTPUT_TEST.split('.'))
     print(OUTPUT_TRAIN, OUTPUT_TEST)
-    print(OUTPUT_TRAIN_SCALED, OUTPUT_TEST_SCALED)
+
+    df_ua_fs.dropna(inplace=True)
+
     # Divide train/test General
     df_feat = df_ua_fs[[x for x in df_ua_fs.columns if x.startswith(
         'f_')]+['cellID']].set_index('cellID')
     df_target = df_ua_fs[[x for x in df_ua_fs.columns if x.startswith(
         't_')]+['cellID']].set_index('cellID')
+
+    print("==================", df_ua_fs.shape, df_feat.shape, df_target.shape)
     df_X_train, df_X_test, df_y_train, df_y_test = train_test_split(
         df_feat, df_target, test_size=0.2, random_state=42, stratify=df_target)
+
     return df_X_train, df_X_test, df_y_train, df_y_test
 
 
@@ -136,8 +140,10 @@ def split_train_test(BASE_DIR_CITY, df_ua_fs, CITY_NAME, SIZE, METRIC, S, WS, C)
         SIZE) + "_s" + str(S) + "_ws" + str(WS) + "_c" + str(C) + ".csv") for STEP in ["train", "test"]]
     OUTPUT_TRAIN_SCALED = '_scaled_.'.join(OUTPUT_TRAIN.split('.'))
     OUTPUT_TEST_SCALED = '_scaled_.'.join(OUTPUT_TEST.split('.'))
-    print(OUTPUT_TRAIN, OUTPUT_TEST)
-    print(OUTPUT_TRAIN_SCALED, OUTPUT_TEST_SCALED)
+    print('adasdasd')
+    # print(OUTPUT_TRAIN, OUTPUT_TEST)
+    # print(OUTPUT_TRAIN_SCALED, OUTPUT_TEST_SCALED)
+
     # Divide train/test General
     df_feat = df_ua_fs[[x for x in df_ua_fs.columns if x.startswith(
         'f_')]+['cellID']].set_index('cellID')
@@ -282,20 +288,26 @@ def runExperiment(df_train, df_test, CITY_NAME, SIZE, BASE_DIR_CITY, SIZE1,  MET
 
 
 def modelfit(alg, X, y, useTrainCV=True, cv_folds=5, early_stopping_rounds=50, verbose=True):
+    # print("XXXXXXXXXXXXXX", X)
+    # print("yyyyyyyyyyyyyyyyyyy", y)
 
+    le = preprocessing.LabelEncoder()
+    y = list(le.fit_transform(y.values.ravel()))
+    # print(len(le.fit_transform(y.values)), len(y), X.shape)
     if useTrainCV:
         xgb_param = alg.get_xgb_params()
-        xgtrain = xgb.DMatrix(X.values, y.values)
+        xgtrain = xgb.DMatrix(X.values, label=y)
+        # print(xgtrain.get_label())
+        # print(le.fit_transform(y))
         cvresult = xgb.cv(xgb_param, xgtrain, num_boost_round=alg.get_params()[
                           'n_estimators'], nfold=cv_folds, metrics='merror', early_stopping_rounds=early_stopping_rounds)  # verbose_eval=True)#show_progress=True)
         alg.set_params(n_estimators=cvresult.shape[0])
-
-    print(len(X))
 
     # Fit the algorithm on the data
     alg.fit(X, y, eval_metric='merror')
 
     if verbose:
+
         # Predict training set:
         predictions = alg.predict(X)
 
@@ -308,11 +320,33 @@ def modelfit(alg, X, y, useTrainCV=True, cv_folds=5, early_stopping_rounds=50, v
 
 def tune(X, y, param_test, verbose=0, learning_rate=0.1, n_estimators=140, max_depth=5, min_child_weight=1, gamma=0, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=1, reg_alpha=0, seed=28, cv=5):
 
+    print("THIS IS XXXXXXXXXXXXXXXXXX", X.iloc[:2, 1])
+    print("THIS IS YYYYYYYYYYYYYYYYYYYY", y.iloc[:2, 0])
+
     gsearch = GridSearchCV(
-        estimator=XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators, silent=True, objective='multi:softmax', num_class=9, booster='gbtree', n_jobs=1, nthread=1, gamma=gamma, min_child_weight=min_child_weight,
-                                max_delta_step=0, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bylevel=1, reg_alpha=reg_alpha, reg_lambda=1, scale_pos_weight=scale_pos_weight, base_score=0.5, random_state=0, seed=seed, missing=None),
+        estimator=XGBClassifier(max_depth=max_depth,
+                                learning_rate=learning_rate,
+                                n_estimators=n_estimators,
+                                silent=True,
+                                objective='multi:softmax',
+                                booster='gbtree',
+                                n_jobs=1,
+                                nthread=1,
+                                gamma=gamma,
+                                min_child_weight=min_child_weight,
+                                max_delta_step=0,
+                                subsample=subsample,
+                                colsample_bytree=colsample_bytree,
+                                colsample_bylevel=1,
+                                reg_alpha=reg_alpha,
+                                reg_lambda=1,
+                                scale_pos_weight=scale_pos_weight,
+                                base_score=0.5,
+                                random_state=0,
+                                seed=seed,
+                                missing=None),
         param_grid=param_test,
-        scoring='f1',
+        scoring='f1_macro',
         n_jobs=2,
         iid=False,
         cv=cv,
@@ -323,8 +357,21 @@ def tune(X, y, param_test, verbose=0, learning_rate=0.1, n_estimators=140, max_d
 
 
 def evaluate(alg, X_test, y_test):
-    predictions = alg.predict(X_test)
-    return math.sqrt(metrics.mean_squared_error(y_test, predictions))
+
+    # print(alg.predict(X_test))
+    # print(len(alg.predict(X_test)), X_test.shape, len(y_test))
+    le = preprocessing.LabelEncoder()
+    le.fit(y_test.values.ravel())
+    # transform back encoded labels to strings ,e.g.:"Industrial"
+    predictions = le.inverse_transform(alg.predict(X_test))
+    # predictions = alg.predict(X_test)
+    # print("NAAAAAAAAAAAAAAAAAAAAAAAAMESSSSSSSSSSSSSSSSSSSSSSSSSSS",
+    #       y_test.values.ravel(), predictions)
+    return sklearn.metrics.f1_score(y_test.values.ravel(), predictions, average="macro", labels=np.unique(y_test.values.ravel()))
+
+    # return sklearn.metrics.f1_score(X_test, predictions, labels=y_test, average="macro", sample_weight=None)
+    # sklearn.metrics.f1_score(y_true, y_pred, labels=None, pos_label=1, average=’binary’, sample_weight=None)
+    # return math.sqrt(metrics.mean_squared_error(y_test, predictions))
 
 
 def test_param(params, X_train, y_train, X_test, y_test, seed, verbose=True):
@@ -333,8 +380,8 @@ def test_param(params, X_train, y_train, X_test, y_test, seed, verbose=True):
         objective='multi:softmax',
         num_class=9,
         seed=seed)
-    xgb1.set_params(**params)
 
+    xgb1.set_params(**params)
     # Addestro il modello con una parte del dataset
     modelfit(xgb1, X_train, y_train, verbose=verbose)
 
@@ -525,8 +572,21 @@ def tuning_main_steps(df_ua_fs, CITY_NAME,  SIZE1,
 
     print('\tStarting ')
 
-    X_train, y_train, X_test, y_test = split_train_test_for_tuning(
+    X_train, X_test, y_train, y_test = split_train_test_for_tuning(
         BASE_DIR_CITY, df_ua_fs, CITY_NAME, SIZE1, METRIC, S, WS, C)
+
+    print("X_train", len(X_train.values))
+    print("y_train", len(y_train.values))
+    print("X_test", len(X_test.values))
+    print("y_test", len(y_test.values))
+    print("X_train proporzione: ", len(X_train.values) /
+          (len(X_train.values)+len(X_test.values)) * 100)
+    print("X_test proporzione: ", len(X_test.values) /
+          (len(X_train.values)+len(X_test.values)) * 100)
+    print("y_train proporzione: ", len(y_train.values) /
+          (len(y_train.values)+len(y_test.values)) * 100)
+    print("y_test proporzione: ", len(y_test.values) /
+          (len(y_train.values)+len(y_test.values)) * 100)
 
     params, tuning, testing = build_model(
         X_train, y_train, X_test, y_test, 27, verbose=1)
@@ -636,15 +696,15 @@ def main(argv):
     df_ua_fs = mergeUA_CellVector(BASE_DIR_CITY, args.CITY_NAME,
                                   args.SIZE1, args.METRIC, args.SIZE2, args.S, args.WS, args.C)
 
-    # # divide Train/Test
-    df_train, df_test = split_train_test(
-        BASE_DIR_CITY, df_ua_fs, args.CITY_NAME, args.SIZE1,  args.METRIC, args.S, args.WS, args.C)
-
     if args.tuning == 1:
         # Tune parameters
         tuning_main_steps(df_ua_fs, args.CITY_NAME,  args.SIZE1,
                           BASE_DIR_CITY, args.SIZE1,  args.METRIC, args.S, args.WS, args.C)
     else:
+        # divide Train/Test
+        df_train, df_test = split_train_test(
+            BASE_DIR_CITY, df_ua_fs, args.CITY_NAME, args.SIZE1,  args.METRIC, args.S, args.WS, args.C)
+
         # run experiment
         runExperiment(df_train, df_test, args.CITY_NAME,  args.SIZE1,
                       BASE_DIR_CITY, args.SIZE1,  args.METRIC, args.S, args.WS, args.C)
