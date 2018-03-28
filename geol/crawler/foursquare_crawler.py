@@ -68,6 +68,8 @@ class Foursquare:
 
         logger.info(url)
 
+        # ------------ start request! ---------------
+
         while call_flag is False:
 
             try:
@@ -190,8 +192,7 @@ class Foursquare:
             logger.info(str(
                 ind) + " - " + str(sw[1]) + ", " + str(sw[0]) + ", " + str(ne[1]) + ", " + str(ne[0]))
 
-            # ------------ start request! ---------------
-            # To be changed if using https://github.com/mLewisLogic/foursquare/
+            # Setup parameters for calling venue search API
             params = dict(
                 sw=sw[1] + ", " + sw[0],
                 ne=ne[1] + ", " + ne[0],
