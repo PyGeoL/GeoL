@@ -140,5 +140,5 @@ class POISequences():
             raise ValueError(
                 "The input file with POIs must contains the column cellID.")
 
-        self._pois.sort_values(by=["cellID", "name"]).groupby('cellID')\
+        self._pois.sort_values(by=["cellID", "categories"]).groupby('cellID')\
             .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None)
