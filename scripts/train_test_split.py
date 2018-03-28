@@ -1,5 +1,5 @@
 """
-Script to split a dataset in train+test sets. 
+Script to split a dataset in train+test sets.
 """
 
 # Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
@@ -85,82 +85,65 @@ def merge_features_targets(features_path, targets_path, merge_strategy):
     Merges them according to the provided merge strategy
     """
 
-    # load Features DataFrame
-    features_df = pd.read_csv(
-        features_path, sep='\t', header=None)
-    cols = [int(i) for i in features_df.columns]
-    cols[0] = 'cellID'
-    features_df.columns = cols
-    features_df.columns = list(map(
-        lambda x: 'f_fs_' + str(x) if x != "cellID" else x, features_df.columns))
-    features_df.head(2)
-
     # load Targets DataFrame
-    targets_df = pd.read_csv(targets_path)
-    targets_df.columns = list(
-        map(lambda x: 't_'+x if x != "cellID" else x, targets_df.columns))
+    targets_df = pd.read_csv(
+        targets_path)
+
+    # load Features DataFrame
+    features_df = pd.read_csv(features_path, sep="\t")
 
     # select only relevant columns
-    targets_df_relevant = targets_df.loc[:, [
-        'cellID', 't_predominant']]
-
+    targets_df_relevant = targets_df.loc[:, ['cellID', 'predominant']]
+    features_df_relevant = features_df.loc[:, ['cellID']]
+    features_df_relevant.drop_duplicates(
+        subset=["cellID"], inplace=True)
     # Merge Features and Targets
-    if merge_strategy not in [1, 2, 3]:
+    if merge_strategy not in [0, 1]:
         logger.info(
             "Please select a correct merge strategy. Options are (1) Left, (2) Right, (3) Inner Join.")
-    if merge_strategy == 1:
+    if merge_strategy == 0:
         # Merge the UA and cellvector dataframes
-        merged_features_targets = targets_df_relevant.merge(
-            features_df, on="cellID", how='left')
-
-    elif merge_strategy == 2:
-        # Merge the UA and cellvector dataframes
-        merged_features_targets = targets_df_relevant.merge(
-            features_df, on="cellID", how='left')
-
+        merged_df = targets_df_relevant.merge(
+            features_df_relevant, on="cellID", how='left')
     else:
         # Merge the UA and cellvector dataframes
-        merged_features_targets = targets_df_relevant.merge(
-            features_df, on="cellID", how='left')
-
-    # remove empty
-    merged_features_targets.dropna(inplace=True)
-
-    return merged_features_targets
+        merged_df = targets_df_relevant.merge(
+            features_df_relevant, on="cellID", how='inner')
+    return merged_df
 
 
-def split_train_test(merged_features_targets, features_path, targets_path, output_dir):
+def split_train_test(merged_df, features_path, targets_path, output_dir):
 
-    # Divide train/test General
-    df_feat = merged_features_targets[[x for x in merged_features_targets.columns if x.startswith(
-        'f_')]+['cellID']].set_index('cellID')
-    df_target = merged_features_targets[[x for x in merged_features_targets.columns if x.startswith(
-        't_')]+['cellID']].set_index('cellID')
-
-    print("==================", merged_features_targets.shape,
-          df_feat.shape, df_target.shape)
+    # Divide train/test
+    # NOTE: I'm repeating the IDs as Sklearn wants 2 separate inputs
+    df_feat = merged_df['cellID'].values
+    df_target = merged_df['predominant'].values
 
     # Split Train and Test
     df_X_train, df_X_test, df_y_train, df_y_test = train_test_split(
         df_feat, df_target, test_size=0.2, random_state=42, stratify=df_target)
+    print(type(df_X_train))
 
-    # Remove empty values
-    df_X_train.dropna(inplace=True)
-    df_X_test.dropna(inplace=True)
+    # # Remove empty values
+    # df_X_train.dropna(inplace=True)
+    # df_X_test.dropna(inplace=True)
 
     # Prepare output directory path
     OUTPUT_PATH = os.path.abspath(output_dir)
     OUTPUT_TRAIN = os.path.join(
-        OUTPUT_PATH, "train_" + features_path.split("/")[-1].split(".")[0])
+        OUTPUT_PATH, "train_IDs_" + features_path.split("/")[-1].split(".")[0])
     OUTPUT_TEST = os.path.join(
-        OUTPUT_PATH, "test_" + targets_path.split("/")[-1].split(".")[0])
+        OUTPUT_PATH, "test_IDs_" + targets_path.split("/")[-1].split(".")[0])
 
     # Save datasets
-    df_train = df_X_train.merge(df_y_train, left_index=True, right_index=True)
-    df_test = df_X_test.merge(df_y_test, left_index=True, right_index=True)
-    df_train.to_csv(OUTPUT_TRAIN, index_label="cellID",
+    df_train = pd.DataFrame({"cellID": df_X_train, "predominant": df_y_train})
+    df_test = pd.DataFrame({"cellID": df_X_test, "predominant": df_y_test})
+    # df_train = df_X_train.merge(
+    # df_y_train, left_index=True, right_index=True)
+    # df_test = df_X_test.merge(df_y_test, left_index=True, right_index=True)
+    df_train.to_csv(OUTPUT_TRAIN, index=False,
                     sep="\t", float_format='%.6f')
-    df_test.to_csv(OUTPUT_TEST, index_label="cellID",
+    df_test.to_csv(OUTPUT_TEST, index=False,
                    sep="\t", float_format='%.6f')
 
     # # Create scaled version of train and test
@@ -182,7 +165,7 @@ def split_train_test(merged_features_targets, features_path, targets_path, outpu
     # df_test_scaled.to_csv(OUTPUT_TEST_SCALED,
     #                       index_label="cellID", sep="\t", float_format='%.6f')
 
-    return df_train, df_test
+    # return df_train, df_test
 
 
 # -----------------------------------------------------------------------------------------------------------
@@ -190,7 +173,7 @@ def split_train_test(merged_features_targets, features_path, targets_path, outpu
 
 def main(argv):
 
-    parser = argparse.ArgumentParser('Run XGBOOST on Cellvector embeddings')
+    parser = argparse.ArgumentParser('s')
 
     parser.add_argument('-f', '--features-path',
                         help='Path to features file',
@@ -214,7 +197,7 @@ def main(argv):
                         type=str)
 
     parser.add_argument('-ms', '--merge-strategy',
-                        help='Choose how to merge features and targets\' sets before splitting. 1 = left join, 2 = right, 3 = inner. Defaults to left joining features dataframe with targets.',
+                        help='Choose how to merge features and targets\' sets before splitting. 0 = left join, 1 = inner. Defaults to inner, joining features dataframe with targets.',
                         dest='merge_strategy',
                         default=1,
                         type=int)
@@ -222,13 +205,18 @@ def main(argv):
     args = parser.parse_args()
 
     # Merge Features and Targets
-    merged_features_targets = merge_features_targets(
-        args.features_path, args.targets_path, merge_strategy)
+    merged_df = merge_features_targets(
+        args.features_path, args.targets_path, args.merge_strategy)
 
     # Split and save the Train and Test datasets
-    split_train_test(merge_features_targets, args.features_path,
+    split_train_test(merged_df, args.features_path,
                      args.targets_path, args.output_dir)
 
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+# TODO
+# devi testartlo ma per farlo hai bisogno dei dati di FS mapped sulla griglia che stai rifacendo perche gianni ha cancellato tutto
+# poi potrai lanciar il ttto con :
+# python scripts/train_test_split.py - f - t data/barcelona/count/barcelona_ua_count_200.csv - o test
