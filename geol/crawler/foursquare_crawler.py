@@ -1,11 +1,20 @@
-import requests
+"""
+Class for crawling Foursquare venues. It downloads all the venues in a given area.
+The crawling methods are based on the official python wrapper of Foursquare (https://github.com/mLewisLogic/foursquare/)
+and the class needs ClientID and Client Secret that have to be specified in the foursquare_key.json file of GeoL.
+"""
+
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+#          Michele Ferretti <mic.ferretti@gmail.com>
+#          Natkamon Tovanich
+
+
 import pandas as pd
 import time
 import pkg_resources
 import os
 import foursquare
 from geol.geol_logger.geol_logger import logger
-from geol.utils import constants
 
 
 class Foursquare:
@@ -38,11 +47,9 @@ class Foursquare:
 
         # append whatever data we got so far to the filesystem
         if os.path.isfile(self.output):
-            self.foursquare_data.to_csv(
-                mode='a', header=False, index=False, encoding='utf-8')
+            self.foursquare_data.to_csv(mode='a', header=False, index=False, encoding='utf-8')
         else:
-            self.foursquare_data.to_csv(
-                self.output, encoding='utf-8', index=False)
+            self.foursquare_data.to_csv(self.output, encoding='utf-8', index=False)
 
         # Reset POIs
         # "Flush" the dataframe, so it can save the new batch of Points Of Interest
@@ -127,11 +134,11 @@ class Foursquare:
         # Check if there is still rate remaining to call API
         if int(fs_client.rate_remaining) <= 0 and int(fs_client.rate_limit) > 0:
             waiting_time = 3600
-            logger.info("wait", waiting_time)
+            logger.info("Wait", waiting_time)
             self.write_file()
             time.sleep(waiting_time)
 
-        if len(tot) >= 30:
+        if len(tot) >= 10:
             x1, y1 = params['ne'].split(',')
             x2, y2 = params['sw'].split(',')
 
