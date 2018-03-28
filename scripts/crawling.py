@@ -2,7 +2,6 @@
 
 import argparse
 import sys
-sys.path.append("../GeoL")
 import logging
 import os
 from geol.utils import utils
@@ -14,24 +13,19 @@ os.environ['NO_PROXY'] = "nominatim.openstreetmap.org"
 logger = logging.getLogger(__name__)
 
 
-def write_grid(output, size, window_size, crs,
-               area_name, base_shape):
-    """
-    Create the tessellation and save into the outputfolder.
-    """
+def write_grid(output, size, window_size, crs, area_name, base_shape):
+
+    # Create the tessellation and save into the outputfolder.
     try:
         grid = None
 
         if base_shape is not None:
-            grid = SquareGrid.from_file(
-                base_shape, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_file(base_shape, meters=size, window_size=window_size, grid_crs=crs)
         else:
-            grid = SquareGrid.from_name(
-                area_name, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_name(area_name, meters=size, window_size=window_size, grid_crs=crs)
 
     except:
-        logger.error("Error in creating tessellation " +
-                     output, exc_info=True)
+        logger.error("Error in creating tessellation " + output, exc_info=True)
         sys.exit(0)
 
     return grid
@@ -112,35 +106,29 @@ def main(argv):
 
     args = parser.parse_args()
 
-    foursquare_keys = utils.read_foursqaure_keys(
-        "resources/foursquare_keys.json")
+    # Get foursquare key from key's file.
+    foursquare_keys = utils.read_foursqaure_keys("resources/foursquare_keys.json")
 
-    output = os.path.abspath(os.path.join(
-        args.outputfolder, args.prefix + "_foursquare_pois.csv"))
+
+    outputfile = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_foursquare_pois.csv"))
 
     if (args.verbosity == 1):
         logging.basicConfig(
-            format='%(levelname)s: %(message)s', level=logging.INFO)
+            format='[ %(levelname)s: %(message)s ]', level=logging.INFO)
 
     elif (args.verbosity == 2):
         logging.basicConfig(
-            format='%(levelname)s: %(message)s', level=logging.DEBUG)
+            format='[ %(levelname)s: %(message)s ]', level=logging.DEBUG)
 
     # Crete the tessellation if not passed in input. By default we use a square tessellation.
-    grid = write_grid(output, args.size, args.window_size,
-                      "epsg:4326", args.area_name, args.base_shape)
+    grid = write_grid(outputfile, args.size, args.window_size, "epsg:4326", args.area_name, args.base_shape)
 
-    outputfile = os.path.join(
-        args.outputfolder, args.prefix + "_foursquare_poi.csv")
-
+    logger.info("Loading Foursquare credentials")
     client_id = foursquare_keys[args.account_number]['CLIENT_ID']
     client_secret = foursquare_keys[args.account_number]['FOURSQUARE_API_TOKEN']
 
-    print(client_id)
-    print(client_secret)
-
-    c = foursquare_crawler.Foursquare(
-        client_id=client_id, client_secret=client_secret)
+    logger.info("Starting the crawler")
+    c = foursquare_crawler.Foursquare(client_id=client_id, client_secret=client_secret)
     c.start(grid.grid, outputfile, restart=args.restart)
 
 

@@ -19,6 +19,8 @@ from geol.geol_logger.geol_logger import logger
 
 class Foursquare:
 
+    #TODO: add base class for generic crawler
+
     def __init__(self, client_id="",
                  client_secret=""):
 
@@ -41,6 +43,7 @@ class Foursquare:
         self.request_counter = 0
 
     def write_file(self):
+
         # Set type int and save
         self.foursquare_data["checkin"] = self.foursquare_data["checkin"].astype(int)
         self.foursquare_data["usercount"] = self.foursquare_data["usercount"].astype(int)
