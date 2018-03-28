@@ -118,6 +118,8 @@ def main(argv):
         logging.basicConfig(
             format='[ %(levelname)s: %(message)s ]', level=logging.DEBUG)
 
+    logger.info("Outputfile: " + outputfile)
+
     # Crete the tessellation if not passed in input. By default we use a square tessellation.
     grid = write_grid(outputfile, args.size, args.window_size, "epsg:4326", args.area_name, args.base_shape)
 
