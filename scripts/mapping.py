@@ -7,99 +7,103 @@
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point
-import numpy as np
-import os
-import getopt
+from geol.geol_logger.geol_logger import logger
 import sys
-import csv
+import argparse
+import os
 
 
 def main(argv):
 
-    try:
-        opts, args = getopt.getopt(
-            argv, "hg:d:o:n:", ["grid=", "dataset=", "outputfile=", "names="])
+    parser = argparse.ArgumentParser('Foursquare crawler.')
 
-    except getopt.GetoptError:
-        print(
-            'script.py -g <grid> -d <dataset> -o <outputfile> -n <Latitude and Longitude names>')
-        sys.exit(2)
+    parser.add_argument('-i', '--input',
+                        help='POIs file with relative coordinates.',
+                        action='store',
+                        dest='input',
+                        required=True,
+                        type=str)
 
-    for opt, arg in opts:
-        if opt == '-h':
-            print(
-                'script.py -g <grid> -d <dataset> -o <outputfile> -n <Latitude and Longitude names>')
-            sys.exit()
-        elif opt in ("-g", "--grid"):
-            grid_inputfile = os.path.abspath(arg)
-        elif opt in ("-d", "--dataset"):
-            dataset_inputfile = os.path.abspath(arg)
-        elif opt in ("-o", "--outputfile"):
-            outputfile = os.path.abspath(arg)
-        elif opt in ("-n", "--names"):
-            names = arg
+    parser.add_argument('-g', '--grid',
+                        help='Input grid for the mapping. If crs is not WGS84, specify it with the param -c',
+                        action='store',
+                        dest='grid',
+                        required=True,
+                        type=str)
 
-    latitude, longitude = names.split(' ')[:2]
+    parser.add_argument('-c', '--crs',
+                        help='Coordinate Reference System for the input grid. It is requested only if it is different from WGS84.',
+                        action='store',
+                        dest='crs',
+                        default='epsg:4326',
+                        type=str)
 
-    # CARICO GRIGLIA E SETTO SISTEMA DI RIFERIMENTO A WGS84
-    gdf = gpd.GeoDataFrame.from_file(grid_inputfile)
-    # gdf.crs = {'init': 'epsg:2236', 'units': 'm'}
-    gdf.crs = {'init': 'epsg:4326'}
-    gdf = gdf.to_crs({'init': 'epsg:4326'})
-#     print("STAMPO HEAD DI {}".format(grid_inputfile))
-#     print(gdf.head(2))
-    print('griglia caricata')
+    parser.add_argument('-o', '--outputfolder',
+                        help='Output folder where to save the mapped file.',
+                        action='store',
+                        dest='outputfolder',
+                        required='True',
+                        type=str)
 
-    # CARICO DATASET
-    df = pd.DataFrame(pd.read_csv(
-        dataset_inputfile, sep=",", low_memory=False))
-    print('dataset_inputfile', dataset_inputfile)
-    print(df.columns)
+    parser.add_argument('-lat', '--latitude',
+                        help='Latitude name.',
+                        action='store',
+                        dest='latitude',
+                        default='latitude',
+                        type=str)
 
-    print('dataset caricato')
+    parser.add_argument('-long', '--longitude',
+                        help='Longitude name.',
+                        action='store',
+                        dest='longitude',
+                        default='longitude',
+                        type=str)
 
-    # CREO OGGETTI POINT CON LE COPPIE DI LONGITUDINE E LATITUDINE
+    args = parser.parse_args()
+
+    latitude = args.latitude
+    longitude = args.longitude
+
+    if(args.verbosity == 1):
+        logger.setLevel()
+
+    elif(args.verbosity == 2):
+        logger.setLevel(logger.INFO)
+
+
+    # Load the grid
+    logger.info("Load the grid")
+    gdf = gpd.GeoDataFrame.from_file(args.grid)
+    gdf.crs = {'init': args.crs}
+
+    if args.crs != 'epsg:4326':
+        gdf = gdf.to_crs({'init': 'epsg:4326'})
+
+    # Load POIs
+    logger.info("Load POIs")
+    df = pd.DataFrame(pd.read_csv(args.input, sep=",", low_memory=False))
+
+    # Create Point from latitude, longitude pairs and build a GeoDataFrame
+    logger.info("Build geometry")
     geometry = [Point(xy) for xy in zip(df[longitude], df[latitude])]
-
-    # METTO I PUNTI IN UN GEODATAFRAME
     data = gpd.GeoDataFrame(df, crs={'init': 'epsg:4326'}, geometry=geometry)
-    # data = data.to_crs({'init': 'epsg:4326'})
     data.to_crs(gdf.crs, inplace=True)
 
-    #  ALTERNATIVO: Ho di gia' delle features
-    # data = gpd.GeoDataFrame.from_file(dataset_inputfile)
-#     print(data.head())
-    print('geodataframe costruito')
-
-    # CHECK GEOMETRY VALIDITY
-
+    # Check Geometry Validity
     ans = data.geometry.is_valid
     invalid = ans[ans == False]
     data.drop(invalid.index, axis=0, inplace=True)
-    print(data.head())
 
-    print('punti non validi filtrati')
+    # Spatial Join with the grid to associate each entry to the related cell ('within')
+    join = gpd.sjoin(data, gdf[['cellID', 'geometry']], how='inner', op='within')
 
-    # FACCIO UNA SPACIAL JOIN CON LA GRIGLIA PER ASSOCIARE OGNI ENTRY ALLA
-    # CELLA CHE LA CONTIENE ('within')
-    join = gpd.sjoin(data, gdf[['cellID', 'geometry']],
-                     how='inner', op='within')
-
-    print(join.head())
-    print('spatial join terminata')
-
-    # ELIMINO LE COLONNE NON PIÙ NECESSARIE
+    # Remove additional columns
     join.drop(['index_right', 'geometry'], axis=1, inplace=True)
 
-    # E RINOMINO L' 'id' DELLE CELLE
-    # join.rename(columns={'id': 'cellID'}, inplace=True)
-    print(join.head())
-
-    # INFINE, SCRIVO IL FILE
+    # Save output
+    logger.info("Save output file")
+    outputfile = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_mapped_foursquare_pois.csv"))
     join.to_csv(outputfile, index=False, sep='\t', float_format='%.6f')
-
-    print('file salvato')
-
 
 if __name__ == "__main__":
     main(sys.argv[1:])

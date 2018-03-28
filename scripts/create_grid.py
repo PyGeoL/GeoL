@@ -2,7 +2,8 @@
 Script to create grid(s), given input args.
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+#          Michele Ferretti <mic.ferretti@gmail.com>
 
 import logging
 from geol.geol_logger.geol_logger import logger
