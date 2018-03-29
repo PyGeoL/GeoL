@@ -150,8 +150,8 @@ class Foursquare:
             y12 = str((float(y1) + float(y2)) / 2.0)
 
             new_params = [
-                dict(ne=x12 + ", " + y1, sw=x2 + ", " + y12, intent="browse"),
                 dict(ne=x1 + ", " + y1, sw=x12 + ", " + y12, intent="browse"),
+                dict(ne=x12 + ", " + y1, sw=x2 + ", " + y12, intent="browse"),
                 dict(ne=x12 + ", " + y12, sw=x2 + ", " + y2, intent="browse"),
                 dict(ne=x1 + ", " + y12, sw=x12 + ", " + y2, intent="browse"),
             ]
