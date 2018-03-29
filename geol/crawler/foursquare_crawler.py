@@ -136,21 +136,16 @@ class Foursquare:
         x1, y1 = list(map(float, params['ne'].split(',')))
         x2, y2 = list(map(float, params['sw'].split(',')))
 
-        # Calculate the Euclidean distance without square root
-        dist_sq = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)
-
-        # NOTE: dirty estimate 1 coordinate = 111,111 meters -> 10e-4 coordinate = 11.111 meters
-        # Therefore, dist > 10e-4 -> dist^2 > 10e-6
-        if len(tot) >= 10 & dist_sq >= 0.000001:
+        if len(tot) >= 10 and (x1 - x2) >= 0.0001 and (y1 - y2) >= 0.0001:
 
             x12 = (x1 + x2) / 2.0
             y12 = (y1 + y2) / 2.0
 
             new_params = [
-                dict(ne=x12 + ", " + y1, sw=x2 + ", " + y12, intent="browse"),
-                dict(ne=x1 + ", " + y1, sw=x12 + ", " + y12, intent="browse"),
-                dict(ne=x12 + ", " + y12, sw=x2 + ", " + y2, intent="browse"),
-                dict(ne=x1 + ", " + y12, sw=x12 + ", " + y2, intent="browse"),
+                dict(ne=str(x12) + ", " + str(y1), sw=str(x2) + ", " + str(y12), intent="browse"),
+                dict(ne=str(x1) + ", " + str(y1), sw=str(x12) + ", " + str(y12), intent="browse"),
+                dict(ne=str(x12) + ", " + str(y12), sw=str(x2) + ", " + str(y2), intent="browse"),
+                dict(ne=str(x1) + ", " + str(y12), sw=str(x12) + ", " + str(y2), intent="browse"),
             ]
 
             for param in new_params:
