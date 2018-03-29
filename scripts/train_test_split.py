@@ -131,9 +131,9 @@ def split_train_test(merged_df, features_path, targets_path, output_dir):
     # Prepare output directory path
     OUTPUT_PATH = os.path.abspath(output_dir)
     OUTPUT_TRAIN = os.path.join(
-        OUTPUT_PATH, "train_IDs_" + features_path.split("/")[-1].split(".")[0])
+        OUTPUT_PATH, "train_IDs_" + features_path.split("/")[-1].split(".")[0] + ".csv")
     OUTPUT_TEST = os.path.join(
-        OUTPUT_PATH, "test_IDs_" + targets_path.split("/")[-1].split(".")[0])
+        OUTPUT_PATH, "test_IDs_" + targets_path.split("/")[-1].split(".")[0] + ".csv")
 
     # Save datasets
     df_train = pd.DataFrame({"cellID": df_X_train, "predominant": df_y_train})
@@ -190,7 +190,7 @@ def main(argv):
                         type=str)
 
     parser.add_argument('-o', '--output_dir',
-                        help='Output directory. Train/Test files will be name with the following convention: test_/train_ + INPUT_FILE_NAME',
+                        help='Output directory. Train/Test files will be name with the following convention: test_IDs_/train_IDs_ + INPUT_FILE_NAME',
                         action='store',
                         dest='output_dir',
                         required=True,
