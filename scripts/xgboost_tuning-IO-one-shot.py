@@ -142,57 +142,57 @@ def split_train_test_from_file(BASE_DIR_CITY, CITY_NAME, SIZE, METRIC, S, WS, C)
     return df_X_train, df_X_test, df_y_train, df_y_test
 
 
-# def split_train_test(BASE_DIR_CITY, df_ua_fs, CITY_NAME, SIZE, METRIC, S, WS, C):
+def split_train_test(BASE_DIR_CITY, df_ua_fs, CITY_NAME, SIZE, METRIC, S, WS, C):
 
-#     # output UA data mapped to grid
-#     OUTPUT_TRAIN, OUTPUT_TEST = [os.path.join(BASE_DIR_CITY, STEP, CITY_NAME + "_fs_" + str(SIZE) + "_skip_" + METRIC+"_" + str(
-#         SIZE) + "_s" + str(S) + "_ws" + str(WS) + "_c" + str(C) + ".csv") for STEP in ["train", "test"]]
-#     OUTPUT_TRAIN_SCALED = '_scaled_.'.join(OUTPUT_TRAIN.split('.'))
-#     OUTPUT_TEST_SCALED = '_scaled_.'.join(OUTPUT_TEST.split('.'))
-#     print('adasdasd')
-#     # print(OUTPUT_TRAIN, OUTPUT_TEST)
-#     # print(OUTPUT_TRAIN_SCALED, OUTPUT_TEST_SCALED)
+    # output UA data mapped to grid
+    OUTPUT_TRAIN, OUTPUT_TEST = [os.path.join(BASE_DIR_CITY, STEP, CITY_NAME + "_fs_" + str(SIZE) + "_skip_" + METRIC+"_" + str(
+        SIZE) + "_s" + str(S) + "_ws" + str(WS) + "_c" + str(C) + ".csv") for STEP in ["train", "test"]]
+    OUTPUT_TRAIN_SCALED = '_scaled_.'.join(OUTPUT_TRAIN.split('.'))
+    OUTPUT_TEST_SCALED = '_scaled_.'.join(OUTPUT_TEST.split('.'))
+    print('adasdasd')
+    # print(OUTPUT_TRAIN, OUTPUT_TEST)
+    # print(OUTPUT_TRAIN_SCALED, OUTPUT_TEST_SCALED)
 
-#     # Divide train/test General
-#     df_feat = df_ua_fs[[x for x in df_ua_fs.columns if x.startswith(
-#         'f_')]+['cellID']].set_index('cellID')
-#     df_target = df_ua_fs[[x for x in df_ua_fs.columns if x.startswith(
-#         't_')]+['cellID']].set_index('cellID')
-#     df_X_train, df_X_test, df_y_train, df_y_test = train_test_split(
-#         df_feat, df_target, test_size=0.2, random_state=42, stratify=df_target)
+    # Divide train/test General
+    df_feat = df_ua_fs[[x for x in df_ua_fs.columns if x.startswith(
+        'f_')]+['cellID']].set_index('cellID')
+    df_target = df_ua_fs[[x for x in df_ua_fs.columns if x.startswith(
+        't_')]+['cellID']].set_index('cellID')
+    df_X_train, df_X_test, df_y_train, df_y_test = train_test_split(
+        df_feat, df_target, test_size=0.2, random_state=42, stratify=df_target)
 
-#     df_X_train.dropna(inplace=True)
-#     df_X_test.dropna(inplace=True)
-#     #     df_X_test.fillna(0, inplace=True)
+    df_X_train.dropna(inplace=True)
+    df_X_test.dropna(inplace=True)
+    #     df_X_test.fillna(0, inplace=True)
 
-#     # save datasets
-#     df_train = df_X_train.merge(df_y_train, left_index=True, right_index=True)
-#     df_test = df_X_test.merge(df_y_test, left_index=True, right_index=True)
-#     df_train.to_csv(OUTPUT_TRAIN, index_label="cellID",
-#                     sep="\t", float_format='%.6f')
-#     df_test.to_csv(OUTPUT_TEST, index_label="cellID",
-#                    sep="\t", float_format='%.6f')
+    # save datasets
+    df_train = df_X_train.merge(df_y_train, left_index=True, right_index=True)
+    df_test = df_X_test.merge(df_y_test, left_index=True, right_index=True)
+    df_train.to_csv(OUTPUT_TRAIN, index_label="cellID",
+                    sep="\t", float_format='%.6f')
+    df_test.to_csv(OUTPUT_TEST, index_label="cellID",
+                   sep="\t", float_format='%.6f')
 
-#     # Create scaled version of train and test
-#     X_scaler = StandardScaler()
-#     df_X_train_scaled = X_scaler.fit_transform(df_X_train)
-#     df_X_train_scaled = pd.DataFrame(
-#         df_X_train_scaled, index=df_X_train.index, columns=df_X_train.columns)
-#     df_X_test_scaled = X_scaler.transform(df_X_test)
-#     df_X_test_scaled = pd.DataFrame(
-#         df_X_test_scaled, index=df_X_test.index, columns=df_X_test.columns)
+    # Create scaled version of train and test
+    X_scaler = StandardScaler()
+    df_X_train_scaled = X_scaler.fit_transform(df_X_train)
+    df_X_train_scaled = pd.DataFrame(
+        df_X_train_scaled, index=df_X_train.index, columns=df_X_train.columns)
+    df_X_test_scaled = X_scaler.transform(df_X_test)
+    df_X_test_scaled = pd.DataFrame(
+        df_X_test_scaled, index=df_X_test.index, columns=df_X_test.columns)
 
-#     df_train_scaled = df_X_train_scaled.merge(
-#         df_y_train, left_index=True, right_index=True)
-#     df_test_scaled = df_X_test_scaled.merge(
-#         df_y_test, left_index=True, right_index=True)
+    df_train_scaled = df_X_train_scaled.merge(
+        df_y_train, left_index=True, right_index=True)
+    df_test_scaled = df_X_test_scaled.merge(
+        df_y_test, left_index=True, right_index=True)
 
-#     df_train_scaled.to_csv(OUTPUT_TRAIN_SCALED,
-#                            index_label="cellID", sep="\t", float_format='%.6f')
-#     df_test_scaled.to_csv(OUTPUT_TEST_SCALED,
-#                           index_label="cellID", sep="\t", float_format='%.6f')
+    df_train_scaled.to_csv(OUTPUT_TRAIN_SCALED,
+                           index_label="cellID", sep="\t", float_format='%.6f')
+    df_test_scaled.to_csv(OUTPUT_TEST_SCALED,
+                          index_label="cellID", sep="\t", float_format='%.6f')
 
-#     return df_train, df_test
+    return df_train, df_test
 
 
 def printEvalutationMetrics(df_y_test, y_pred):
