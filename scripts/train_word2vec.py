@@ -1,160 +1,207 @@
-import os
-import errno
+"""
+Simple script to train word2vec model. It gets in input a list of POIs categories chains (e.g. Shops & Services:Gas Stations).
+It preprocess the text and train the word2vec model with the words at the requested level (e.g. level=2 Gas Stations).
+"""
+
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+#          Michele Ferretti <mic.ferretti@gmail.com>
+
+import argparse
 import pandas as pd
-import geopandas as gpd
-from geopandas import GeoDataFrame
-from shapely.geometry import Point
-import sys
-import getopt
-sys.path.append('./GeoL')
-from geol.utils import utils
-import pathlib
-import re
-import gensim
-
 import numpy as np
-from sklearn import preprocessing
+import gensim
+import logging
+import string
+import os
+import sys
+from sklearn.manifold import TSNE
+import matplotlib
+matplotlib.use('Agg')  # don't use Windows by default
+import matplotlib.pyplot as plt
+import multiprocessing
+from geol.geol_logger.geol_logger import logger
+from geol.utils.utils import select_category, normalize_words, pre_processing
 
 
-from scipy import stats
-
-import seaborn as sns
-sns.set_style("ticks")
-sns.set_context("paper")
-
-from sklearn.model_selection import train_test_split
-import xgboost
-from xgboost.sklearn import XGBRegressor
-from sklearn import metrics  # Additional scklearn functions
-from sklearn.model_selection import GridSearchCV  # Perforing grid search
-
-
-from sklearn.svm import SVR
-from sklearn.model_selection import learning_curve
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn.svm import LinearSVR
-from sklearn.preprocessing import StandardScaler
-
-from sklearn.metrics import confusion_matrix
-import sklearn.metrics as metrics
-
-
-from matplotlib.pylab import rcParams
-rcParams['figure.figsize'] = 15, 4
-
-import csv
-
-
-# SET CITY NAME
-# ,"milan","madrid","berlin","paris","stockholm"]
-CITIES = ["barcelona", "london", "rome"]
-
-
-SIZES = [50, 100, 200, 250]
-
-
-# Base directory
-BASE_DIR = os.path.abspath(".")
-# base directory for data files
-BASE_DIR_DATA = os.path.join(BASE_DIR, "data")
-
-
-def csv_2_geodf(dataset_inputfile):
+def run_w2v_model(outputfolder, word_list, skip_gram, prefix, size, count, window, plot):
     """
-    Loads a .csv and returns a GeoPandas GeoDataFrame
+    Run Word2Vec model
     """
-    # LOAD DATASET
-    df = pd.DataFrame(pd.read_csv(
-        dataset_inputfile, sep="\t", low_memory=False))
-    print('dataset_inputfile', dataset_inputfile)
-    print(df.columns)
-
-    print('dataset caricato')
-
-    # Create Shapely Point Objects
-    geometry = [Point(xy) for xy in zip(df['longitude'], df['latitude'])]
-
-    # Store Points in a GeoDataFrame
-    data = gpd.GeoDataFrame(df, crs={'init': 'epsg:4326'}, geometry=geometry)
-
-    # data = data.to_crs({'init': 'epsg:4326'})
-    data.to_crs(data.crs, inplace=True)
-    return data
+    output = os.path.abspath(os.path.join(outputfolder, 'models', prefix + '_s'+str(size) +
+                                          '_ws'+str(window)+'_c'+str(count)+'.model'))
+    model = gensim.models.Word2Vec(word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=8)  # size 5 is default
+    model.save(output)
+    if plot:
+        tsne_plot(model, size, window, count, outputfolder, prefix)
 
 
-def sum_vectors(w_list):
+def tsne_plot(model, size, window, count, outputfolder, prefix):
     """
-    Inputs a list of Numpy vectors
-    Returns the sum 
+    Creates and TSNE model and plots it
     """
-    e = 0
-    for i, e in enumerate(w_list):
-        e += w_list[i]
-    return e
+
+    labels = []
+    tokens = []
+
+    for word in model.wv.vocab:
+        tokens.append(model[word])
+        labels.append(word)
+
+    tsne_model = TSNE(perplexity=40, n_components=2,
+                      init='pca', n_iter=2500, random_state=23)
+    new_values = tsne_model.fit_transform(tokens)
+
+    x = []
+    y = []
+    for value in new_values:
+        x.append(value[0])
+        y.append(value[1])
+
+    plt.figure(figsize=(16, 16))
+    for i in range(len(x)):
+        plt.scatter(x[i], y[i])
+        plt.annotate(labels[i],
+                     xy=(x[i], y[i]),
+                     xytext=(5, 2),
+                     textcoords='offset points',
+                     ha='right',
+                     va='bottom')
+    plt.title('Size:'+str(size)+' Window:'+str(window)+' Count:'+str(count))
+    plt.savefig(os.path.abspath(os.path.join(outputfolder, 'imgs', prefix + '_s' + str(size)+'_ws' + str(window) +
+                                             '_c'+str(count)+'.png')), bbox_inches='tight')
+    plt.show()
 
 
-def cell_vector_representation(poi_grid, w2v_model, level, output_file, size):
-    """
-    Takes as input a spatial grid with POIs for each cell, a Word2Vec model, and a level of detail
-    For each cell:
-        Looks up each category in a cell for the given level in the W2V model, taking the corresponding vector representation
-        Sums all the vectors
-    Returns a dataframe with a w2v representation for all words in that cell in every row
-    """
-    # load shapefile of mapped POIs
-    gdf = csv_2_geodf(poi_grid)
+def main(argv):
 
-    # load w2v_model
-    model = gensim.models.Word2Vec.load(w2v_model)
+    parser = argparse.ArgumentParser('Build your own Word2Vec embeddings.')
 
-    # group every cell
-    grouped_gdf = gdf.groupby('cellID')
+    parser.add_argument('-i', '--inputfile',
+                        help='Input file.',
+                        action='store',
+                        dest='input',
+                        required=True,
+                        type=str)
 
-    output = {}
-    with open(output_file, 'w') as out:
-        for cell, group in grouped_gdf:
-            output[cell] = []
-            for categories_raw in group['categories']:
-                # select level
-                category = utils.select_category(
-                    categories_raw.split(':'), level)[-1]
-                # lookup category in w2v
+    parser.add_argument('-o', '--outputfolder',
+                        help='Output folder where to save the grids.',
+                        action='store',
+                        dest='outputfolder',
+                        required=True,
+                        type=str)
+
+    parser.add_argument('-p', '--prefix',
+                        action='store',
+                        dest='prefix',
+                        help='Prefix for the filename in the form <prefix>_<grid_type>_<cell_size>. By default is w2v',
+                        default='w2v',
+                        type=str)
+
+    parser.add_argument('-plt', '--plot',
+                        action='store_true',
+                        dest='plot',
+                        help='t-SNE plot',
+                        default=False)
+
+    parser.add_argument('-l', '--level',
+                        help='Level of depth in the categories chain (default=5).',
+                        dest='level',
+                        default=5,
+                        type=int)
+
+    parser.add_argument('-sg', '--skip-gram',
+                        help='Defines the training algorithm. If 1, skip-gram is employed; otherwise, CBOW is used.',
+                        dest='skip_gram',
+                        default=0,
+                        type=int)
+
+    parser.add_argument('-s', '--size',
+                        help='List of vector sizes (s1, s2, ..), default = 50.',
+                        dest='sizes',
+                        nargs="+",
+                        default=[50],
+                        type=int)
+
+    parser.add_argument('-ws', '--window_size)',
+                        help='List of window sizes (s1, s2, ..), default = 50.',
+                        dest='windows',
+                        nargs="+",
+                        default=[50],
+                        type=int)
+
+    parser.add_argument('-c', '--min_count',
+                        help='List of minimum count sizes (s1, s2, ..), default = 50.',
+                        dest='counts',
+                        nargs="+",
+                        default=[50],
+                        type=int)
+
+    parser.add_argument('-m', '--multiprocessing',
+                        help='Abilitate multiprocessing (strongly suggested when more CPUs are available)',
+                        dest='mp',
+                        action='store_true',
+                        default=False)
+
+    parser.add_argument('-v', '--verbose',
+                        help='Level of output verbosity.',
+                        action='store',
+                        dest='verbosity',
+                        default=0,
+                        type=int,
+                        nargs="?")
+
+    args = parser.parse_args()
+
+    if(args.verbosity == 1):
+        logger.setLevel(logging.INFO)
+
+    elif(args.verbosity == 2):
+        logger.setLevel(logging.INFO)
+
+    if args.mp == True:
+        jobs = []
+
+    # ------ pre-processing text ------
+    # load data and normalize the text
+    with open(args.input, 'r') as input:
+            text = input.read()
+
+    # split on new lines and remove empty lines
+    labels_list = [x.split('\t') for x in list(filter(None, text.split('\n')))]
+
+    # Select the words based on the depth level
+    word_list = pre_processing(labels_list, args.level)
+
+    # create word embeddings
+    for size in args.sizes:
+        for window in args.windows:
+            for count in args.counts:
                 try:
-                    vector = model[category]
-                    output[cell].append(np.array(vector))
-                except(KeyError):
-                    pass
-            if len(output[cell]) == 0:
-                output[cell] = [np.zeros(int(size))]
+                    # Get the factory according to the tessellation type in input
+                    if args.mp == True:
 
-            # sum vectors
-            sum_w = sum_vectors(output[cell])
-            sum_w_str = str("\t".join(map(str, sum_w)))
-            text_to_write = str(cell) + '\t' + sum_w_str + '\n'
+                        p = multiprocessing.Process(target=run_w2v_model, args=(
+                            args.outputfolder, word_list, args.skip_gram, args.prefix, size, count, window, args.plot))
 
-            out.write(text_to_write)
+                        jobs.append(p)
+                        p.start()
+
+                    else:
+                        output = os.path.abspath(os.path.join(args.outputfolder, 'models', args.prefix +
+                                                              '_s' + str(size) + '_ws'+str(window)+'_c'+str(count)+'.model'))
+                        run_w2v_model(output, word_list, args.skip_gram, size,
+                                      count, window, args.plot)
+
+                except ValueError:
+                    logger.error(
+                        "Value error instantiating the grid.", exc_info=True)
+                    sys.exit(1)
+
+                except TypeError:
+                    logger.error(
+                        "Type error building the grid.", exc_info=True)
+                    sys.exit(1)
 
 
-for CITY in CITIES:
-    print(CITY, CITIES)
-    BASE_DIR_CITY = os.path.join(BASE_DIR_DATA, CITY)
-    MODELS_DIR = os.path.join(BASE_DIR_CITY, 'output-skip', 'models')
-    GRID_DIR = os.path.join(BASE_DIR_CITY, 'mapped')
-    EMBEDDINGS_DIR = os.path.join(BASE_DIR_CITY, 'embeddings')
-
-    for MAPPED_GRID in os.listdir(GRID_DIR):
-        POI_GRID = os.path.join(GRID_DIR, MAPPED_GRID)
-        POI_GRID_SIZE = MAPPED_GRID.split('.')[0].split('_')[-1]
-        for MODEL in os.listdir(MODELS_DIR):
-            W2V_MODEL = os.path.join(MODELS_DIR, MODEL)
-            OUTPUT_NAME = CITY + "_gs" + POI_GRID_SIZE + \
-                "_"+MODEL.split('.')[0] + '.txt'
-            OUTPUT_PATH = os.path.join(EMBEDDINGS_DIR, OUTPUT_NAME)
-            print(OUTPUT_PATH)
-            m = re.search('_s([0-9]+)_', MODEL)
-            if m:
-                size = m.group(1)
-            print(OUTPUT_PATH)
-            cell_vector_representation(
-                POI_GRID, W2V_MODEL, 2, OUTPUT_PATH, size)
+if __name__ == "__main__":
+    main(sys.argv[1:])
