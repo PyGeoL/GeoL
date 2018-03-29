@@ -1,27 +1,18 @@
-"""
-Class for crawling Foursquare venues. It downloads all the venues in a given area.
-The crawling methods are based on the official python wrapper of Foursquare (https://github.com/mLewisLogic/foursquare/)
-and the class needs ClientID and Client Secret that have to be specified in the foursquare_key.json file of GeoL.
-"""
-
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
-#          Michele Ferretti <mic.ferretti@gmail.com>
-#          Natkamon Tovanich
-
-
+import requests
 import pandas as pd
 import time
 import pkg_resources
 import os
 import foursquare
+from geopy.distance import great_circle
 from geol.geol_logger.geol_logger import logger
+from geol.utils import constants
 
 
 class Foursquare:
 
-    #TODO: add base class for generic crawler
-
-    def __init__(self, client_id="", client_secret=""):
+    def __init__(self, client_id="",
+                 client_secret=""):
 
         self.client_id = client_id
         self.client_secret = client_secret
@@ -42,16 +33,17 @@ class Foursquare:
         self.request_counter = 0
 
     def write_file(self):
-
         # Set type int and save
         self.foursquare_data["checkin"] = self.foursquare_data["checkin"].astype(int)
         self.foursquare_data["usercount"] = self.foursquare_data["usercount"].astype(int)
 
         # append whatever data we got so far to the filesystem
         if os.path.isfile(self.output):
-            self.foursquare_data.to_csv(self.output, mode='a', header=False, index=False, encoding='utf-8')
+            self.foursquare_data.to_csv(
+                mode='a', header=False, index=False, encoding='utf-8')
         else:
-            self.foursquare_data.to_csv(self.output, encoding='utf-8', index=False)
+            self.foursquare_data.to_csv(
+                self.output, encoding='utf-8', index=False)
 
         # Reset POIs
         # "Flush" the dataframe, so it can save the new batch of Points Of Interest
@@ -138,11 +130,13 @@ class Foursquare:
         # Check if there is still rate remaining to call API
         if int(fs_client.rate_remaining) <= 0 and int(fs_client.rate_limit) > 0:
             waiting_time = 3600
-            logger.info("Wait", waiting_time)
+            logger.info("wait", waiting_time)
             self.write_file()
             time.sleep(waiting_time)
 
-        if len(tot) >= 10:
+        # Recursive if there are more than 10 places and the distance is greater than 20 meters
+        if len(tot) >= 10 and great_circle(params['ne'], params['sw']).meters >= 20:
+
             x1, y1 = params['ne'].split(',')
             x2, y2 = params['sw'].split(',')
 
@@ -150,8 +144,8 @@ class Foursquare:
             y12 = str((float(y1) + float(y2)) / 2.0)
 
             new_params = [
-                dict(ne=x1 + ", " + y1, sw=x12 + ", " + y12, intent="browse"),
                 dict(ne=x12 + ", " + y1, sw=x2 + ", " + y12, intent="browse"),
+                dict(ne=x1 + ", " + y1, sw=x12 + ", " + y12, intent="browse"),
                 dict(ne=x12 + ", " + y12, sw=x2 + ", " + y2, intent="browse"),
                 dict(ne=x1 + ", " + y12, sw=x12 + ", " + y2, intent="browse"),
             ]
