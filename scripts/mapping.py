@@ -7,6 +7,7 @@
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point
+import logging
 from geol.geol_logger.geol_logger import logger
 import sys
 import argparse
@@ -15,12 +16,19 @@ import os
 
 def main(argv):
 
-    parser = argparse.ArgumentParser('Foursquare crawler.')
+    parser = argparse.ArgumentParser('Foursquare mapping to a spatial grid.')
 
     parser.add_argument('-i', '--input',
                         help='POIs file with relative coordinates.',
                         action='store',
                         dest='input',
+                        required=True,
+                        type=str)
+
+    parser.add_argument('-p', '--prefix',
+                        action='store',
+                        dest='prefix',
+                        help='Prefix for the filename specifying the city name.',
                         required=True,
                         type=str)
 
@@ -59,17 +67,24 @@ def main(argv):
                         default='longitude',
                         type=str)
 
+    parser.add_argument('-v', '--verbose',
+                        help='Level of output verbosity.',
+                        action='store',
+                        dest='verbosity',
+                        default=0,
+                        type=int,
+                        nargs="?")
+
     args = parser.parse_args()
 
     latitude = args.latitude
     longitude = args.longitude
 
     if(args.verbosity == 1):
-        logger.setLevel()
+        logger.setLevel(logging.INFO)
 
     elif(args.verbosity == 2):
-        logger.setLevel(logger.INFO)
-
+        logger.setLevel(logger.DEBUG)
 
     # Load the grid
     logger.info("Load the grid")
@@ -95,15 +110,18 @@ def main(argv):
     data.drop(invalid.index, axis=0, inplace=True)
 
     # Spatial Join with the grid to associate each entry to the related cell ('within')
-    join = gpd.sjoin(data, gdf[['cellID', 'geometry']], how='inner', op='within')
+    join = gpd.sjoin(data, gdf[['cellID', 'geometry']],
+                     how='inner', op='within')
 
     # Remove additional columns
     join.drop(['index_right', 'geometry'], axis=1, inplace=True)
 
     # Save output
     logger.info("Save output file")
-    outputfile = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_mapped_foursquare_pois.csv"))
+    outputfile = os.path.abspath(os.path.join(
+        args.outputfolder, args.prefix + "_mapped_foursquare_pois.csv"))
     join.to_csv(outputfile, index=False, sep='\t', float_format='%.6f')
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

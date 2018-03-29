@@ -12,6 +12,7 @@ os.environ['NO_PROXY'] = "nominatim.openstreetmap.org"
 
 logger = logging.getLogger(__name__)
 
+
 def write_grid(output, size, window_size, crs, area_name, base_shape):
 
     # Create the tessellation and save into the outputfolder.
@@ -19,9 +20,11 @@ def write_grid(output, size, window_size, crs, area_name, base_shape):
         grid = None
 
         if base_shape is not None:
-            grid = SquareGrid.from_file(base_shape, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_file(
+                base_shape, meters=size, window_size=window_size, grid_crs=crs)
         else:
-            grid = SquareGrid.from_name(area_name, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_name(
+                area_name, meters=size, window_size=window_size, grid_crs=crs)
 
     except:
         logger.error("Error in creating tessellation " + output, exc_info=True)
@@ -108,7 +111,8 @@ def main(argv):
     # Get foursquare key from key's file.
     foursquare_keys = utils.read_foursqaure_keys(args.keys)
 
-    outputfile = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_foursquare_pois.csv"))
+    outputfile = os.path.abspath(os.path.join(
+        args.outputfolder, args.prefix + "_foursquare_pois.csv"))
 
     if (args.verbosity == 1):
         logging.basicConfig(
@@ -121,14 +125,16 @@ def main(argv):
     logger.info("Outputfile: " + outputfile)
 
     # Crete the tessellation if not passed in input. By default we use a square tessellation.
-    grid = write_grid(outputfile, args.size, args.window_size, "epsg:4326", args.area_name, args.base_shape)
+    grid = write_grid(outputfile, args.size, args.window_size,
+                      "epsg:4326", args.area_name, args.base_shape)
 
     logger.info("Loading Foursquare credentials")
     client_id = foursquare_keys[args.account_number]['CLIENT_ID']
     client_secret = foursquare_keys[args.account_number]['FOURSQUARE_API_TOKEN']
 
     logger.info("Starting the crawler")
-    c = foursquare_crawler.Foursquare(client_id=client_id, client_secret=client_secret)
+    c = foursquare_crawler.Foursquare(
+        client_id=client_id, client_secret=client_secret)
     c.start(grid.grid, outputfile, restart=args.restart)
 
 
