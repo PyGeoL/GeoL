@@ -133,7 +133,7 @@ class Foursquare:
             self.write_file()
             time.sleep(waiting_time)
 
-        x1, y1 = list(map(float ,params['ne'].split(',')))
+        x1, y1 = list(map(float, params['ne'].split(',')))
         x2, y2 = list(map(float, params['sw'].split(',')))
 
         # Calculate the Euclidean distance without square root
