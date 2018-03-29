@@ -21,6 +21,7 @@ import gensim
 import numpy as np
 import logging
 from geol.geol_logger.geol_logger import logger
+from functools import reduce
 
 
 def features_prepper(features_dir):
@@ -43,14 +44,15 @@ def features_prepper(features_dir):
             features_df, features_df_name.split(".")[0])
         # store sanitized dfs
         sanitized_features_dfs.append(sanitized_features_df)
+        print(sanitized_features_df)
 
-     # concat dataframes
-    concat_sanitized_features_dfs = pd.concat(
-        sanitized_features_dfs, axis=1)
+    # merge all the dataframes
+    merged_sanitized_features_dfs = reduce(lambda left, right: pd.merge(
+        left, right, left_index=True, right_index=True, how="outer"), sanitized_features_dfs)
 
     # remove index name
-    del concat_sanitized_features_dfs.index.name
-    return concat_sanitized_features_dfs
+    del merged_sanitized_features_dfs.index.name
+    return merged_sanitized_features_dfs
 
 
 def train_test_loader(train_path, test_path):
