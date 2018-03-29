@@ -4,6 +4,7 @@ import time
 import pkg_resources
 import os
 import foursquare
+from geopy.distance import great_circle
 from geol.geol_logger.geol_logger import logger
 from geol.utils import constants
 
@@ -133,19 +134,19 @@ class Foursquare:
             self.write_file()
             time.sleep(waiting_time)
 
-        x1, y1 = list(map(float, params['ne'].split(',')))
-        x2, y2 = list(map(float, params['sw'].split(',')))
+        if len(tot) >= 10 and great_circle(params['ne'], params['sw']).meters >= 20:
 
-        if len(tot) >= 10 and (x1 - x2) >= 0.0001 and (y1 - y2) >= 0.0001:
+            x1, y1 = params['ne'].split(',')
+            x2, y2 = params['sw'].split(',')
 
-            x12 = (x1 + x2) / 2.0
-            y12 = (y1 + y2) / 2.0
+            x12 = str((float(x1) + float(x2)) / 2.0)
+            y12 = str((float(y1) + float(y2)) / 2.0)
 
             new_params = [
-                dict(ne=str(x12) + ", " + str(y1), sw=str(x2) + ", " + str(y12), intent="browse"),
-                dict(ne=str(x1) + ", " + str(y1), sw=str(x12) + ", " + str(y12), intent="browse"),
-                dict(ne=str(x12) + ", " + str(y12), sw=str(x2) + ", " + str(y2), intent="browse"),
-                dict(ne=str(x1) + ", " + str(y12), sw=str(x12) + ", " + str(y2), intent="browse"),
+                dict(ne=x12 + ", " + y1, sw=x2 + ", " + y12, intent="browse"),
+                dict(ne=x1 + ", " + y1, sw=x12 + ", " + y12, intent="browse"),
+                dict(ne=x12 + ", " + y12, sw=x2 + ", " + y2, intent="browse"),
+                dict(ne=x1 + ", " + y12, sw=x12 + ", " + y2, intent="browse"),
             ]
 
             for param in new_params:
