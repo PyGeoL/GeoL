@@ -30,7 +30,7 @@ class POISequences():
         """
         #  Read foursquare MAPPED onto the grid
         logger.info("Reading POIs dataset.")
-        df = pd.read_csv(inputfile, sep=sep, nrows=400)
+        df = pd.read_csv(inputfile, sep=sep)
 
         # Create GeoDataFrame from the read DataFrame
         logger.info("Create GeoDataFrame")
@@ -70,8 +70,7 @@ class POISequences():
     def _distance(self, band_size=500):
 
         logger.info("Building sequences for each point in the sapce")
-        wthresh = pysal.weights.DistanceBand.from_dataframe(
-            self._pois, band_size, p=2, binary=False, ids=self._pois.index)
+        wthresh = pysal.weights.DistanceBand.from_dataframe(self._pois, band_size, p=2, binary=False, ids=self._pois.index)
 
         ds = []
         for index, indexes in wthresh.neighbors.items():

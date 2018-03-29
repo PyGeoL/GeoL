@@ -135,8 +135,7 @@ def main(argv):
             args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
         sequences_generator.distance_based_sequence(args.band_size, output)
     else:
-        raise ValueError(
-            "Please, check the parameters as no valid configurations have been found.")
+        raise ValueError("Please, check the parameters as no valid configurations have been found.")
 
 
 if __name__ == "__main__":

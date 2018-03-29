@@ -21,4 +21,4 @@ for CITY in ['london','rome']:
         strategy = SEQUENCE.split('sequences_')[1].split('.')[0]
         prefix = "skip_"+ strategy
         print(INPUT_SEQUENCE)
-        os.system("python GeoL/scripts/word2vec_embeddings.py -i {} -o {} -p {} -plt  -s 50 100 200 -ws 3 5 7 10 -c 2 5 10 -m -v 2".format(INPUT_SEQUENCE, OUTPUT_DIR, prefix))
+        os.system("python GeoL/scripts/train_word2vec.py -i {} -o {} -p {} -plt  -s 50 100 200 -ws 3 5 7 10 -c 2 5 10 -m -v 2".format(INPUT_SEQUENCE, OUTPUT_DIR, prefix))

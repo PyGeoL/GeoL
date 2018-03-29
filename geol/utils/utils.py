@@ -102,8 +102,7 @@ def normalize_word(word):
 
 def normalize_words(words_array):
     """
-    remove nasty chars
-    and sets word to lowercase
+    Remove nasty chars and sets word to lowercase
     """
     pattern = re.compile('[\W_]+', re.UNICODE)
     return [normalize_word(x) for x in words_array]
@@ -111,9 +110,7 @@ def normalize_words(words_array):
 
 def select_category(list_of_labels, level):
     """
-    Aggregates all the labels for each feature
-    at the given level
-    separated with _
+    Aggregates all the labels for each feature at the given level separated with _
     """
     tmp = []
 
@@ -124,22 +121,13 @@ def select_category(list_of_labels, level):
             tmp.append(norm_w[level])
         else:
             tmp.append(norm_w[len(norm_w) - 1])
-            # print("Selected level is too deep!")
     return tmp
 
 
-def pre_processing(input_file, depth_level=3):
+def pre_processing(labels_list, depth_level=5):
     """
-    Inputs a file of tab-separated labels
-    Returns array of array of joined labels for specified depth level (default=3)
+    Returns array of array of joined labels for specified depth level (default=5, last word of each chain.)
     """
-
-    #  import text file
-    with open(input_file, 'r') as input:
-        text = input.read()
-
-    # split on new lines and remove empty lines
-    labels_list = [x.split('\t') for x in list(filter(None, text.split('\n')))]
 
     # select labels at given depth and join them
     labels_joined_list = [select_category(x, depth_level) for x in labels_list]
