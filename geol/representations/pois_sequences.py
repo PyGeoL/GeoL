@@ -69,13 +69,12 @@ class POISequences():
 
     def _distance(self, band_size=500):
 
+        logger.info("Building sequences for each point in the sapce")
         wthresh = pysal.weights.DistanceBand.from_dataframe(
             self._pois, band_size, p=2, binary=False, ids=self._pois.index)
 
         ds = []
-
         for index, indexes in wthresh.neighbors.items():
-
             if len(indexes) == 0:
                 d = {}
                 d['observation'] = index
@@ -90,34 +89,43 @@ class POISequences():
                     d['distance'] = wthresh.weights[index][i]
                     ds.append(d)
 
-        df = pd.DataFrame(ds)
+        obs = pd.DataFrame(ds)
 
-        return df
+        return obs
 
     def distance_based_sequence(self, band_size, outfile):
 
-        df = self._distance(band_size)
+        obs = self._distance(band_size)
 
-        df.sort_values(by=['observation', 'distance'],
-                       ascending=True, inplace=True)
+        # First step - get the categories for observation ID
+        obs_1 = obs.merge(self._pois[['categories']], left_on='observation', right_index=True).rename(
+            columns={'categories': 'cat_observation'})
 
-        # Retrive observation/observed categories from the original dataframe
-        tmp = df.merge(self._pois[['categories']], left_on='observed', right_index=True)\
-            .merge(self._pois[['categories']], left_on='observation', right_index=True,
-                   suffixes=['_observed', '_observation'])
+        # Second step - get the categories for observed ID
+        obs_2 = obs_1.merge(self._pois[['categories']], left_on='observed', right_index=True).rename(
+            columns={'categories': 'cat_observed'})
 
-        tmp = tmp.groupby(['observation', 'categories_observation']).apply(
-            lambda x: '\t'.join(x['categories_observed']) if len(x) > 2 else None).reset_index().dropna().rename(columns={0: "seq"})
+        # Order by inverse of distance, which is not the real distance but the interaction value from PySal.
+        # The interaction among points decreases as the distance increase.
+        obs_2.sort_values(by=['observation', 'distance'], ascending=False, inplace=True)
 
-        tmp.loc[:, "complete"] = tmp['categories_observation'] + \
-            "\t" + tmp['seq']
+        # Third step - build the sequence joining the words. We keep sequences with at least 3 words.
+        obs_3 = obs_2.groupby(['observation', 'cat_observation']).apply(
+            lambda x: '\t'.join(x['cat_observed']) if len(x) > 2 else None).reset_index().dropna().rename(
+            columns={0: "sequence"})
+        obs_3.loc[:, "complete"] = obs_3['cat_observation'] + "\t" + obs_3['sequence']
 
-        return tmp['complete']
-        # .to_csv(outfile, index=False, header=None)
+        # Fourth step - join the pois dataframe with the sequences and save into a csv
+        logger.info("Save sequences")
+        self._pois[['categories', 'geometry']].merge(obs_3, left_index=True, right_on='observation')[
+            ['categories', 'geometry', 'complete']].to_csv(outfile.split(".csv")[0] + "_check.csv", sep='\t', index=False)
+
+        obs_3[['complete']].to_csv(outfile, index=False, header=False)
 
     def nearest_based_sequence(self, outfile, inputgrid):
 
         logger.info("Load the grid.")
+
         # Load inputgrid
         g = Grid.from_file(inputgrid)
         grid = g.grid.to_crs({'init': constants.universal_crs})
@@ -127,13 +135,12 @@ class POISequences():
 
         df = df.merge(grid[['cellID', 'centroid']], on='cellID')
 
-        logger.info("Compute centroid for cells.")
+        logger.info("Compute centroid for cells and build the sequences")
         df.loc[:, 'distance'] = df.apply(self._centroid_distance, axis=1)
         df.sort_values(by=['cellID', 'distance'], inplace=True, ascending=True)
 
-        logger.info("Creating sequences.")
-        return df.groupby('cellID').apply(self._nearest).dropna()
-        # .to_csv(outfile, index=False, header=None)
+        logger.info("Save sequences")
+        df.groupby('cellID').apply(self._nearest).dropna().to_csv(outfile, index=False, header=None)
 
     def alphabetically_sequence(self, outfile):
 
@@ -141,6 +148,6 @@ class POISequences():
             raise ValueError(
                 "The input file with POIs must contains the column cellID.")
 
-
+        logger.info("Build the sequences")
         self._pois.sort_values(by=["cellID", "categories"]).groupby('cellID')\
             .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None)
