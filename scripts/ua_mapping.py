@@ -12,6 +12,7 @@ import csv
 import argparse
 from geol.utils import constants
 
+
 def main(argv):
 
     parser = argparse.ArgumentParser('Grid - UrbanAtlasLandUse mapping.')
@@ -43,6 +44,14 @@ def main(argv):
                         dest='outputfolder',
                         required='True',
                         type=str)
+
+    parser.add_argument('-v', '--verbose',
+                        help='Level of output verbosity.',
+                        action='store',
+                        dest='verbosity',
+                        default=0,
+                        type=int,
+                        nargs="?")
 
     args = parser.parse_args()
 
@@ -115,24 +124,27 @@ def main(argv):
                                 value="Transport", inplace=True)
 
     # Subset of land use classes (gonalez's classes)
-    admitted_classes = ['Sports', 'HD', 'MD', 'LD', 'Industrial', 'Green_Urban', 'Forests', 'Transport', 'Agri']
+    admitted_classes = ['Sports', 'HD', 'MD', 'LD', 'Industrial',
+                        'Green_Urban', 'Forests', 'Transport', 'Agri']
 
     # ----------- End collapsing landuse classes -----------
 
     # We are removing the NOT admitted classes after computing the predominant
     # landuse_admitted = landuse[landuse['ITEM2012'].isin(admitted_classes)]
 
-    landuse_admitted = landuse.to_crs({'init': constants.universal_crs})[['ITEM2012', 'geometry']]
+    landuse_admitted = landuse.to_crs({'init': constants.universal_crs})[
+        ['ITEM2012', 'geometry']]
 
     # drona
     landuse_admitted.dropna(inplace=True)
 
     # Create a minimum and maximum processor object
     min_max_scaler = preprocessing.MinMaxScaler()
-    reshaped_geom = np.array(landuse_admitted.geometry.area / 10**6).reshape(-1, 1)
+    reshaped_geom = np.array(
+        landuse_admitted.geometry.area / 10**6).reshape(-1, 1)
     x_scaled = min_max_scaler.fit_transform(reshaped_geom)
     landuse_admitted.loc[:, 'coverage'] = x_scaled(landuse_admitted.groupby(['ITEM2012']).sum() /
-                                                    landuse_admitted['coverage'].sum())
+                                                   landuse_admitted['coverage'].sum())
 
     # Load Empty Grid
     grid = gpd.GeoDataFrame.from_file(args.grid)
@@ -145,8 +157,10 @@ def main(argv):
 
     # Spatial join
     df = gpd.sjoin(grid, landuse_admitted, op='intersects')
-    df = df.merge(landuse_admitted[['geometry']], left_on='index_right', right_index=True)
-    df.loc[:, 'intersection'] = df.apply(lambda row: row['geometry_y'].intersection(row['geometry_x']), axis=1)
+    df = df.merge(landuse_admitted[['geometry']],
+                  left_on='index_right', right_index=True)
+    df.loc[:, 'intersection'] = df.apply(
+        lambda row: row['geometry_y'].intersection(row['geometry_x']), axis=1)
 
     #landuse_rows_sjoin = landuse_admitted.shape[0]
     #grid_rows_sjoin = grid.shape[0]
@@ -183,12 +197,14 @@ def main(argv):
     # Compute the list of landuse column names
     lu_col = df['ITEM2012'].drop_duplicates()
 
-    r = pd.pivot_table(df, values='percentage', index=['cellID'], columns=['ITEM2012']).reset_index()
+    r = pd.pivot_table(df, values='percentage', index=[
+                       'cellID'], columns=['ITEM2012']).reset_index()
     r.fillna(0, inplace=True)
     r.loc[:, "predominant"] = r[lu_col].idxmax(axis=1)
 
     # Filter out cell where predominant is more than 0.25 of total area in the cell
-    r.loc[:, "valid"] = r.apply(lambda x: 1 if x[x['predominant']] > 0.25 else 0, axis=1)
+    r.loc[:, "valid"] = r.apply(
+        lambda x: 1 if x[x['predominant']] > 0.25 else 0, axis=1)
 
     # Take only valid columns
     r_valid = r[r["valid"] != 0]
@@ -198,7 +214,8 @@ def main(argv):
     r_valid = r_valid[r_valid['predominant'].isin(admitted_classes)]
 
     # Write mapped output
-    outputfile = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_mapped_ua.csv"))
+    outputfile = os.path.abspath(os.path.join(
+        args.outputfolder, args.prefix + "_mapped_ua.csv"))
 
     r_valid.to_csv(outputfile, index=False, quoting=csv.QUOTE_NONNUMERIC)
     check_statistics = """
@@ -210,6 +227,7 @@ def main(argv):
 
     with open(outputfile, 'w') as outputfile_stats:
         outputfile_stats.write(check_statistics)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
