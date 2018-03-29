@@ -7,11 +7,8 @@ It preprocess the text and train the word2vec model with the words at the reques
 #          Michele Ferretti <mic.ferretti@gmail.com>
 
 import argparse
-import pandas as pd
-import numpy as np
 import gensim
 import logging
-import string
 import os
 import sys
 from sklearn.manifold import TSNE
@@ -20,20 +17,26 @@ matplotlib.use('Agg')  # don't use Windows by default
 import matplotlib.pyplot as plt
 import multiprocessing
 from geol.geol_logger.geol_logger import logger
-from geol.utils.utils import select_category, normalize_words, pre_processing
+from geol.utils.utils import pre_processing
 
 
-def run_w2v_model(outputfolder, word_list, skip_gram, prefix, size, count, window, plot):
+def run_w2v_model(outputfolder, word_list, cbow, prefix, size, count, window, plot):
     """
     Run Word2Vec model
     """
-    output = os.path.abspath(os.path.join(outputfolder, 'models', prefix + '_s'+str(size) +
-                                          '_ws'+str(window)+'_c'+str(count)+'.model'))
-    model = gensim.models.Word2Vec(word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=8)  # size 5 is default
+    output = os.path.abspath(os.path.join(outputfolder, prefix + '_s'+str(size) +
+                                          '_ws' + str(window) + '_c' + str(count) + '.model'))
+
+    skip_gram = 1
+    if cbow:
+        skip_gram = 0
+
+    logger.info("Train w2v model - size: %s, min count: %s, window size: %s" % (size, count, window))
+    model = gensim.models.Word2Vec(word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=4)
     model.save(output)
+
     if plot:
         tsne_plot(model, size, window, count, outputfolder, prefix)
-
 
 def tsne_plot(model, size, window, count, outputfolder, prefix):
     """
@@ -101,7 +104,8 @@ def main(argv):
                         action='store_true',
                         dest='plot',
                         help='t-SNE plot',
-                        default=False)
+                        default=False
+                        )
 
     parser.add_argument('-l', '--level',
                         help='Level of depth in the categories chain (default=5).',
@@ -109,11 +113,13 @@ def main(argv):
                         default=5,
                         type=int)
 
-    parser.add_argument('-sg', '--skip-gram',
-                        help='Defines the training algorithm. If 1, skip-gram is employed; otherwise, CBOW is used.',
-                        dest='skip_gram',
-                        default=0,
-                        type=int)
+
+    # ----- W2V params -----
+    parser.add_argument('-cb', '--cbow',
+                        action='store_true',
+                        dest='cbow',
+                        help='Use it to train the model with CBOW. By default is Skip-Gram.',
+                        default=False)
 
     parser.add_argument('-s', '--size',
                         help='List of vector sizes (s1, s2, ..), default = 50.',
@@ -135,6 +141,8 @@ def main(argv):
                         nargs="+",
                         default=[50],
                         type=int)
+    # ----- end W2V params -----
+
 
     parser.add_argument('-m', '--multiprocessing',
                         help='Abilitate multiprocessing (strongly suggested when more CPUs are available)',
@@ -162,35 +170,37 @@ def main(argv):
         jobs = []
 
     # ------ pre-processing text ------
-    # load data and normalize the text
+    logger.info("Preprocessing text")
+    # Load data and normalize the text
     with open(args.input, 'r') as input:
             text = input.read()
 
-    # split on new lines and remove empty lines
+    # Split on new lines and remove empty lines
     labels_list = [x.split('\t') for x in list(filter(None, text.split('\n')))]
 
     # Select the words based on the depth level
     word_list = pre_processing(labels_list, args.level)
+    # ------ end pre-processing text ------
 
-    # create word embeddings
+    # Train models
     for size in args.sizes:
         for window in args.windows:
             for count in args.counts:
                 try:
-                    # Get the factory according to the tessellation type in input
+
                     if args.mp == True:
 
-                        p = multiprocessing.Process(target=run_w2v_model, args=(
-                            args.outputfolder, word_list, args.skip_gram, args.prefix, size, count, window, args.plot))
+                        p = multiprocessing.Process(target=run_w2v_model,
+                            args=(args.outputfolder, word_list, args.cbow, args.prefix, size, count, window, args.plot))
 
                         jobs.append(p)
                         p.start()
 
                     else:
-                        output = os.path.abspath(os.path.join(args.outputfolder, 'models', args.prefix +
-                                                              '_s' + str(size) + '_ws'+str(window)+'_c'+str(count)+'.model'))
-                        run_w2v_model(output, word_list, args.skip_gram, size,
-                                      count, window, args.plot)
+                        #output = os.path.abspath(os.path.join(args.outputfolder,
+                        #        args.prefix + '_s' + str(size) + '_ws'+str(window)+'_c'+str(count)+'.model'))
+
+                        run_w2v_model(args.outputfolder, word_list, args.cbow, args.prefix, size, count, window, args.plot)
 
                 except ValueError:
                     logger.error(
