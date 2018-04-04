@@ -7,6 +7,7 @@ import geopandas as gpd
 from sklearn import preprocessing
 pd.options.display.max_colwidth = 1000
 import sys
+import logging
 from geol.geol_logger.geol_logger import logger
 import csv
 import argparse
@@ -63,10 +64,10 @@ def main(argv):
     args = parser.parse_args()
 
     if(args.verbosity == 1):
-        logger.setLevel()
+        logger.setLevel(logging.INFO)
 
     elif(args.verbosity == 2):
-        logger.setLevel(logger.INFO)
+        logger.setLevel(logger.DEBUG)
 
     # Read UA dataset
     landuse = gpd.GeoDataFrame.from_file(args.input)
