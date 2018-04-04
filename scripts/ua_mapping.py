@@ -45,6 +45,13 @@ def main(argv):
                         required='True',
                         type=str)
 
+    parser.add_argument('-p', '--prefix',
+                        action='store',
+                        dest='prefix',
+                        help='Prefix for the filename specifying the city name.',
+                        required=True,
+                        type=str)
+
     parser.add_argument('-v', '--verbose',
                         help='Level of output verbosity.',
                         action='store',
