@@ -151,8 +151,8 @@ def main(argv):
     reshaped_geom = np.array(
         landuse_admitted.geometry.area / 10**6).reshape(-1, 1)
     x_scaled = min_max_scaler.fit_transform(reshaped_geom)
-    landuse_admitted.loc[:, 'coverage'] = x_scaled(landuse_admitted.groupby(['ITEM2012']).sum() /
-                                                   landuse_admitted['coverage'].sum())
+    # landuse_admitted.loc[:, 'coverage'] = x_scaled(landuse_admitted.groupby(['ITEM2012']).sum() /
+    #                                                landuse_admitted['coverage'].sum())
 
     # Load Empty Grid
     grid = gpd.GeoDataFrame.from_file(args.grid)
