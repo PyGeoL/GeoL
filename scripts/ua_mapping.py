@@ -7,6 +7,7 @@ import geopandas as gpd
 from sklearn import preprocessing
 pd.options.display.max_colwidth = 1000
 import sys
+import logging
 from geol.geol_logger.geol_logger import logger
 import csv
 import argparse
@@ -45,6 +46,13 @@ def main(argv):
                         required='True',
                         type=str)
 
+    parser.add_argument('-p', '--prefix',
+                        action='store',
+                        dest='prefix',
+                        help='Prefix for the filename specifying the city name.',
+                        required=True,
+                        type=str)
+
     parser.add_argument('-v', '--verbose',
                         help='Level of output verbosity.',
                         action='store',
@@ -56,10 +64,10 @@ def main(argv):
     args = parser.parse_args()
 
     if(args.verbosity == 1):
-        logger.setLevel()
+        logger.setLevel(logging.INFO)
 
     elif(args.verbosity == 2):
-        logger.setLevel(logger.INFO)
+        logger.setLevel(logger.DEBUG)
 
     # Read UA dataset
     landuse = gpd.GeoDataFrame.from_file(args.input)
@@ -143,8 +151,8 @@ def main(argv):
     reshaped_geom = np.array(
         landuse_admitted.geometry.area / 10**6).reshape(-1, 1)
     x_scaled = min_max_scaler.fit_transform(reshaped_geom)
-    landuse_admitted.loc[:, 'coverage'] = x_scaled(landuse_admitted.groupby(['ITEM2012']).sum() /
-                                                   landuse_admitted['coverage'].sum())
+    # landuse_admitted.loc[:, 'coverage'] = x_scaled(landuse_admitted.groupby(['ITEM2012']).sum() /
+    #                                                landuse_admitted['coverage'].sum())
 
     # Load Empty Grid
     grid = gpd.GeoDataFrame.from_file(args.grid)
