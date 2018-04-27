@@ -129,17 +129,17 @@ def main(argv):
                         type=int)
 
     parser.add_argument('-ws', '--window_size)',
-                        help='List of window sizes (s1, s2, ..), default = 50.',
+                        help='List of window sizes (s1, s2, ..), default = 5.',
                         dest='windows',
                         nargs="+",
-                        default=[50],
+                        default=[5],
                         type=int)
 
     parser.add_argument('-c', '--min_count',
-                        help='List of minimum count sizes (s1, s2, ..), default = 50.',
+                        help='List of minimum count sizes (s1, s2, ..), default = 5.',
                         dest='counts',
                         nargs="+",
-                        default=[50],
+                        default=[5],
                         type=int)
     # ----- end W2V params -----
 

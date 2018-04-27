@@ -8,7 +8,7 @@ import argparse
 import sys
 import logging
 import os
-from geol.representations.pois_sequences import POISequences
+from geol.feature_extraction.pois_sequences import POISequences
 from geol.geometry.squaregrid import SquareGrid
 from geol.geol_logger.geol_logger import logger
 

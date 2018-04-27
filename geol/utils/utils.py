@@ -97,14 +97,14 @@ def read_foursqaure_keys(filename):
 
 def normalize_word(word):
 
-    pattern = re.compile('[\W_]+', re.UNICODE)
-    return pattern.sub(r'', word.lower()).strip()
+    pattern = re.compile('[\W]+', re.UNICODE)
+    pattern.sub(r' ', word.lower()).strip().replace(" ", "_")
 
 def normalize_words(words_array):
     """
     Remove nasty chars and sets word to lowercase
     """
-    pattern = re.compile('[\W_]+', re.UNICODE)
+
     return [normalize_word(x) for x in words_array]
 
 

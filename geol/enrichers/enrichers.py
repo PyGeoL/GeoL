@@ -2,24 +2,18 @@
 File description
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
+# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com>
+#          Michele Ferretti <mic.ferretti@gmail.com>
 
-<<<<<<< HEAD:enrichers/enrichers.py
-import abc, six
-from ..geometry.grid import Tessellation
-=======
-
-import abc
-import six
-from ..geometry.tesselation import Tessellation
->>>>>>> a4ede8e4416b346fb00d11a20bd363e1e611da83:geol/enrichers/enrichers.py
 import geopandas as gpd
 import pandas as pd
 from ..utils import constants
 import os
+import six, abc
 
 
 @six.add_metaclass(abc.ABCMeta)
+
 class TessellationEnricher(Tessellation):
 
     def __init__(self, grid, tessellation):

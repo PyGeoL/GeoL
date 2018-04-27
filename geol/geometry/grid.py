@@ -9,7 +9,6 @@ import six
 import abc
 import os
 
-
 @six.add_metaclass(abc.ABCMeta)
 class Grid:
 
