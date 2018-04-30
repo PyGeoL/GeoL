@@ -98,7 +98,7 @@ def read_foursqaure_keys(filename):
 def normalize_word(word):
 
     pattern = re.compile('[\W]+', re.UNICODE)
-    pattern.sub(r' ', word.lower()).strip().replace(" ", "_")
+    return pattern.sub(r' ', word.lower()).strip().replace(" ", "_")
 
 def normalize_words(words_array):
     """
@@ -119,8 +119,10 @@ def select_category(list_of_labels, level):
 
         if len(norm_w) > level:
             tmp.append(norm_w[level])
+
         else:
             tmp.append(norm_w[len(norm_w) - 1])
+
     return tmp
 
 

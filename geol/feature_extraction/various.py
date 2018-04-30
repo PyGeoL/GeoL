@@ -12,16 +12,17 @@ class BOC(FeatureGenerator):
 
     def __init__(self, pois):
 
-        FeatureGenerator.__init__(pois)
+        super(BOC, self).__init__(pois)
 
     @classmethod
-    def from_csv(cls, input, sep='\t', category_column='categories', level=0):
+    def from_csv(cls, input, sep='\t', category_column='categories', level=5):
 
         # load foursquare dataset mapped on a particular grid
         df = pd.read_csv(input, sep=sep)
         df[category_column] = df[category_column].astype(str)
 
         # assign category to each record of the dataset
+
         df.loc[:, "category"] = utils.select_category(list(df[category_column]), level)
 
         # drop entry with empty category
@@ -53,7 +54,7 @@ class BOC(FeatureGenerator):
         df = cell_df.merge(r, on='cellID')
 
         # sort columns
-        df = df[self._categories + ['cellID']]
+        df = df[list(self._categories) + ['cellID']]
 
         # sort rows by cell id
         df.sort_values(by='cellID', inplace=True)

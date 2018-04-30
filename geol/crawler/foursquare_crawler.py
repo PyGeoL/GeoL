@@ -128,7 +128,7 @@ class Foursquare:
                                                       "longitude": lon}, ignore_index=True)
 
         # Check if there is still rate remaining to call API
-        if int(fs_client.rate_remaining) <= 0 and int(fs_client.rate_limit) > 0:
+        if int(fs_client.rate_remaining) <= 100 and int(fs_client.rate_limit) > 0:
             waiting_time = 3600
             logger.info("wait", waiting_time)
             self.write_file()

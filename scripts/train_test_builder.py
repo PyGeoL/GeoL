@@ -2,29 +2,19 @@
 Script to split a dataset in train+test sets.
 """
 
-# Authors: Gianni Barlacchi <gianni.barlacchi@gmail.com> Michele Ferretti <mic.ferretti@gmail.com>
+# Authors:  Gianni Barlacchi <gianni.barlacchi@gmail.com>
+#           Michele Ferretti <mic.ferretti@gmail.com>
 
 
 import argparse
 import os
-import math
-import errno
 import sys
 import pandas as pd
-import geopandas as gpd
-from geopandas import GeoDataFrame
-from shapely.geometry import Point
-import getopt
-import pathlib
-import re
-import gensim
-import numpy as np
-import logging
-from geol.geol_logger.geol_logger import logger
 from functools import reduce
 
 
 def features_prepper(features_dir):
+
     """Prepares features in input
 
     :param features_dir: [Directory containing (multiple) feature file(s)]
@@ -91,12 +81,11 @@ def sanitize_features(df, prepend_letter):
 
 # -----------------------------------------------------------------------------------------------------------
 
-
 def main(argv):
 
     parser = argparse.ArgumentParser('s')
 
-    parser.add_argument('-f', '--features-dir',
+    parser.add_argument('-f', '--features_dir',
                         help='Path to directory containing features files',
                         action='store',
                         dest='features_dir',

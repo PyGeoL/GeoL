@@ -20,10 +20,14 @@ class FeatureGenerator:
     def generate(self):
         pass
 
+    @property
+    def features(self):
+        return self._features
+
     def write(self, outfile):
 
         # normalize columns name
-        cols = [utils.normalize_word(c) for c in self._pois.columns if c is not 'cellID'] + ['cellID']
-        self._pois.columns = cols
+        cols = ['cellID'] + ["f_" + utils.normalize_word(c) for c in self._features.columns if c is not 'cellID']
+        self._features.columns = cols
 
-        return self._pois.to_csv(outfile, index=False)
+        return self._features.to_csv(outfile, index=False)
