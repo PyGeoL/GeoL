@@ -1,5 +1,5 @@
 """
-Script to split a dataset in train+test sets.
+Script to split a dataset in train+test sets based on a given collection of cell IDs .
 """
 
 # Authors:  Gianni Barlacchi <gianni.barlacchi@gmail.com>
