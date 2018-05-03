@@ -14,69 +14,31 @@ from geopandas import GeoDataFrame
 from shapely.geometry import Point
 import sys
 sys.path.append("../GeoL")
-import getopt
-
-import pathlib
-import re
-import gensim
-
-import numpy as np
-from sklearn import preprocessing
-
-import matplotlib
-# matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
-
-from scipy import stats
-
-import seaborn as sns
-sns.set_style("ticks")
-sns.set_context("paper")
-
-
-import xgboost as xgb
-from xgboost.sklearn import XGBClassifier
-
-import sklearn
 from sklearn.model_selection import train_test_split
-from sklearn import metrics  # Additional scklearn functions
-from sklearn.model_selection import GridSearchCV  # Perforing grid search
-
-
-from sklearn.svm import SVR
-from sklearn.model_selection import learning_curve
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn.svm import LinearSVR
-from sklearn.preprocessing import StandardScaler
-
-from sklearn.metrics import confusion_matrix
-import sklearn.metrics as metrics
-
-
-from matplotlib.pylab import rcParams
-rcParams['figure.figsize'] = 15, 4
-
-import csv
-
-# import logging
-# logger = logging.getLogger(__name__)
+from geol.geometry.grid import Grid
 from geol.geol_logger.geol_logger import logger
 
-# def sanitize_features(df, prepend_letter):
-#     """Sanitizes column names and prepends custom strings to column names
 
-#     :param df: Pandas DataFrame to sanitize
-#     :type df: [Pandas DataFrame]
-#     :param prepend_letter: String to prepend
-#     :type prepend_letter: [str]
-#     """
+def filter_landuse(df, threshold=0.25):
 
-#     col_names = df.columns
-#     new_col_names = [prepend_letter+"_" + name.lower().replace(" ", "")
-#                      for name in col_names]
-#     df.columns = new_col_names
+    admitted_classes = ['Sports', 'HD', 'MD', 'LD', 'Industrial', 'Green_Urban', 'Forests', 'Transport', 'Agri']
+    df_valid = df.copy()
+
+    # Filter out cell where predominant is more than 0.25 of total area in the cell
+    df_valid.loc[:, "valid"] = df_valid.apply(lambda x: 1 if x[x['predominant']] > 0.25 else 0, axis=1)
+
+    # Take only valid columns
+    df_valid = df_valid[df_valid["valid"] != 0]
+
+    # Select only cell in admitted classes - IMPORTANT PASSAGE: we are removing the NOT admitted classes
+    # after computing the predominant for each cell.
+    df_valid = df_valid[df_valid['predominant'].isin(admitted_classes)]
+
+    return df_valid
+
+def filter_pois(df, threshold=1):
+
+    return df[df.groupby('cellID').cellID.transform('size') > threshold]
 
 
 def merge_features_targets(features_path, targets_path, merge_strategy):
@@ -86,8 +48,8 @@ def merge_features_targets(features_path, targets_path, merge_strategy):
     """
 
     # load Features DataFrame
-    features_df = pd.read_csv(
-        features_path, sep='\t', header=None)
+    features_df = pd.read_csv(features_path, sep='\t', header=None)
+
     cols = [int(i) for i in features_df.columns]
     cols[0] = 'cellID'
     features_df.columns = cols
@@ -192,19 +154,58 @@ def main(argv):
 
     parser = argparse.ArgumentParser('s')
 
-    parser.add_argument('-f', '--features-path',
-                        help='Path to features file',
+    parser.add_argument('-l', '--landuse',
+                        help='Mapped land use filename',
                         action='store',
-                        dest='features_path',
+                        dest='landuse',
                         required=True,
                         type=str)
 
-    parser.add_argument('-t', '--targets-path',
-                        help='Path to targets file',
+    parser.add_argument('-p', '--pois',
+                        help='Mapped POIs filename',
                         action='store',
-                        dest='targets_path',
+                        dest='pois',
                         required=True,
                         type=str)
+
+    parser.add_argument('-g', '--grid',
+                        help='Original grid filename',
+                        action='store',
+                        dest='grid',
+                        required=True,
+                        type=str)
+
+    parser.add_argument('-f', '--features',
+                        help='List of features file (f1, f2, ..)',
+                        dest='features',
+                        nargs="+",
+                        type=str)
+
+    parser.add_argument('-flu', '--filter_landuse',
+                        help='Enable the removal of cells with too many land usese (< 25%)',
+                        dest='flu',
+                        action='store_true',
+                        default=True)
+
+    parser.add_argument('-fpoi', '--filter_pois',
+                        help='Enable the removal of cells without POIs.',
+                        dest='fpoi',
+                        action='store_true',
+                        default=True)
+
+    parser.add_argument('-tlu', '--threshold_landuse',
+                        help='Set the threshold for the most predominant class (0.25 by default).',
+                        action='store',
+                        dest='tlu',
+                        default=0.25,
+                        type=int)
+
+    parser.add_argument('-tpoi', '--threshold_poi',
+                        help='Set the threshold for the minimum number of POIs (default 1).',
+                        action='store',
+                        dest='tpoi',
+                        default=1,
+                        type=int)
 
     parser.add_argument('-o', '--output_dir',
                         help='Output directory. Train/Test files will be name with the following convention: test_/train_ + INPUT_FILE_NAME',
@@ -222,12 +223,63 @@ def main(argv):
     args = parser.parse_args()
 
     # Merge Features and Targets
-    merged_features_targets = merge_features_targets(
-        args.features_path, args.targets_path, args.merge_strategy)
+    #merged_features_targets = merge_features_targets(args.features_path, args.targets_path, args.merge_strategy)
 
     # Split and save the Train and Test datasets
-    split_train_test(merge_features_targets, args.features_path,
-                     args.targets_path, args.output_dir)
+    split_train_test(merge_features_targets, args.features_path, args.targets_path, args.output_dir)
+
+    # Load UA_mapped, POIs mapped and grid
+    landuse_file = os.path.abspath(args.landuse)
+    landuse = pd.read_csv(landuse_file)
+
+    pois_file = os.path.abspath(args.pois)
+    pois = pd.read_csv(pois_file)
+
+    grid = Grid.from_file(args.grid)
+
+    # Apply filters based on user input
+    if args.flu == True:
+        landuse = filter_landuse(landuse, args.tlu, sep="\t")
+
+    if args.fpoi == True:
+        pois = filter_pois(pois, args.tpoi)
+
+    # Merge and create a list of final admitted cells
+    admitted_cells = grid.merge(landuse[["cellID","predominant"]], on="cellID", how="inner").merge(pois, on="cellID")[["cellID"]]
+
+    # Load features file
+    dfs = []
+    for f in args.features:
+        tmp = pd.read_csv(f, index_col="cellID")
+        dfs.append(tmp)
+
+    features = pd.concat(dfs, axis=0).reset_index()
+
+    # Merge
+    df_all = admitted_cells.merge(features, on="cellID")
+
+    # Split train/test taking into account the random seed to make reproducible the research
+    df_feat = df_all[[x for x in df_all.columns if x.startswith('f_')] + ['cellID']].set_index('cellID')
+    df_target = df_all[[x for x in df_all.columns if x.startswith('t_')] + ['cellID']].set_index('cellID')
+
+    # Split Train and Test
+    df_X_train, df_X_test, df_y_train, df_y_test = train_test_split(
+        df_feat, df_target, test_size=0.2, random_state=42, stratify=df_target)
+
+    # Remove empty values
+    df_X_train.dropna(inplace=True)
+    df_X_test.dropna(inplace=True)
+
+    # Prepare output directory path
+    output_path = os.path.abspath(args.output_dir)
+    output_train = os.path.join(output_path, "train_" + features_path.split("/")[-1].split(".")[0])
+    output_test = os.path.join(output_path, "test_" + targets_path.split("/")[-1].split(".")[0])
+
+    # Save datasets
+    df_train = df_X_train.merge(df_y_train, left_index=True, right_index=True)
+    df_test = df_X_test.merge(df_y_test, left_index=True, right_index=True)
+    df_train.to_csv(output_train, index_label="cellID",sep="\t", float_format='%.6f')
+    df_test.to_csv(output_test, index_label="cellID",sep="\t", float_format='%.6f')
 
 
 if __name__ == "__main__":

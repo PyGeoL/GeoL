@@ -12,16 +12,16 @@ import os
 @six.add_metaclass(abc.ABCMeta)
 class Grid:
 
-    def __init__(self, crs, grid=None):
+    def __init__(self, grid=None):
 
         self._grid = grid
-        self._crs = crs
+        self._crs = grid.crs
 
     @classmethod
-    def from_file(cls, inputfile, crs=constants.default_crs):
+    def from_file(cls, inputfile):
         grid = gpd.GeoDataFrame.from_file(os.path.abspath(inputfile))
-        grid.crs = {'init': crs}
-        return cls(crs, grid=grid)
+
+        return cls(grid=grid)
 
     def write(self, out, driver="ESRI Shapefile", crs=None, schema=None):
         # be sure to assign a CRS

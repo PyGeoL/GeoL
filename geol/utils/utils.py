@@ -13,7 +13,8 @@ import json
 import os
 import errno
 import re
-
+import numpy as np
+import pandas as pd
 
 def get_area_boundary(area_name, which_result=1):
 
@@ -135,3 +136,29 @@ def pre_processing(labels_list, depth_level=5):
     labels_joined_list = [select_category(x, depth_level) for x in labels_list]
 
     return labels_joined_list
+
+def get_embedding(df, model):
+
+    size = model
+    words = df['category'].split("_")
+    embeddings = []
+
+    results = None
+
+    for word in words:
+        try:
+            vector = model[word]
+            embeddings.append(np.array(vector))
+        except(KeyError):
+            pass
+
+    if len(embeddings) == 0:
+        result = np.zeros(int(model.vector_size))
+    else:
+        result = np.sum(embeddings, axis=0)
+
+    d = {}
+    for i in range(len(result)):
+        d[i] = result[i]
+
+    return pd.Series(d)

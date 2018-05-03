@@ -132,8 +132,7 @@ def main(argv):
                                 value="Transport", inplace=True)
 
     # Subset of land use classes (gonalez's classes)
-    admitted_classes = ['Sports', 'HD', 'MD', 'LD', 'Industrial',
-                        'Green_Urban', 'Forests', 'Transport', 'Agri']
+    admitted_classes = ['Sports', 'HD', 'MD', 'LD', 'Industrial', 'Green_Urban', 'Forests', 'Transport', 'Agri']
 
     # ----------- End collapsing landuse classes -----------
 
@@ -210,6 +209,8 @@ def main(argv):
     r.fillna(0, inplace=True)
     r.loc[:, "predominant"] = r[lu_col].idxmax(axis=1)
 
+    # ---------------------------------- Filtering
+    """
     # Filter out cell where predominant is more than 0.25 of total area in the cell
     r.loc[:, "valid"] = r.apply(
         lambda x: 1 if x[x['predominant']] > 0.25 else 0, axis=1)
@@ -220,21 +221,23 @@ def main(argv):
     # Select only cell in admitted classes - IMPORTANT PASSAGE: we are removing the NOT admitted classes
     # after computing the predominant for each cell.
     r_valid = r_valid[r_valid['predominant'].isin(admitted_classes)]
+    """
+    # ----------------------------------
 
     # Write mapped output
-    outputfile = os.path.abspath(os.path.join(
-        args.outputfolder, args.prefix + "_mapped_ua.csv"))
+    outputfile = os.path.abspath(os.path.join(args.outputfolder, args.prefix + "_mapped_ua.csv"))
 
-    r_valid.to_csv(outputfile, index=False, quoting=csv.QUOTE_NONNUMERIC)
-    check_statistics = """
-        landuse_rows_initial:  {}
-        grid_rows_initial: {}
-        landuse_rows_merge: {}
-        grid_rows_merge: {}
-    """.format(landuse_rows_initial, grid_rows_initial, landuse_rows_merge, grid_rows_merge)
+    r.to_csv(outputfile, index=False, quoting=csv.QUOTE_NONNUMERIC)
 
-    with open(outputfile, 'w') as outputfile_stats:
-        outputfile_stats.write(check_statistics)
+    #check_statistics = """
+    #    landuse_rows_initial:  {}
+    #    grid_rows_initial: {}
+    #    landuse_rows_merge: {}
+    #    grid_rows_merge: {}
+    #""".format(landuse_rows_initial, grid_rows_initial, landuse_rows_merge, grid_rows_merge)
+
+    #with open(outputfile, 'w') as outputfile_stats:
+    #    outputfile_stats.write(check_statistics)
 
 
 if __name__ == "__main__":

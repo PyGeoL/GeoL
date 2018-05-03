@@ -7,6 +7,9 @@ File description
 from geol.feature_extraction.base import FeatureGenerator
 from geol.utils import utils
 import pandas as pd
+import gensim
+from geol.geol_logger.geol_logger import logger
+
 
 class BOC(FeatureGenerator):
 
@@ -61,3 +64,51 @@ class BOC(FeatureGenerator):
 
         # Set Feature
         self._features = df
+
+
+class cell2vec(FeatureGenerator):
+
+    def __init__(self, pois, w2v_model, binary=False):
+
+        super(cell2vec, self).__init__(pois)
+        logger.info("Loading w2v model")
+        self._model = gensim.models.KeyedVectors.load_word2vec_format(w2v_model, binary=binary)
+
+    @classmethod
+    def from_csv(cls, input, model, binary=False, sep='\t', category_column='categories', level=5):
+
+        logger.info("Loading mapped POIs")
+
+        # load foursquare dataset mapped on a particular grid
+        df = pd.read_csv(input, sep=sep)
+        df[category_column] = df[category_column].astype(str)
+
+        # assign category to each record of the dataset
+
+        df.loc[:, "category"] = utils.select_category(list(df[category_column]), level)
+
+        # drop entry with empty category
+        df = df.loc[df["category"] != "nan"]
+
+        return cls(df, model,binary=binary)
+
+
+    def generate(self):
+
+        # Get embedding for each word
+        tmp = self._pois.merge(self._pois.apply(utils.get_embedding, args=(self._model,), axis=1),
+                               left_index=True, right_index=True)
+
+        # Keep columns order as with w2v
+        cols = [c for c in tmp.columns if type(c) is int]
+        cols.sort()
+
+        self._features = tmp[['cellID'] + cols]
+        self._features = self._features.groupby("cellID").sum()
+
+    def write(self, outfile):
+
+        cols = ["f_w2v_" + str(c) for c in self._features.columns if c is not 'cellID']
+        self._features.columns = cols
+
+        return self._features.to_csv(outfile, index=True)
