@@ -6,16 +6,10 @@
 # number of POI of each FS category.
 
 import pandas as pd
-import geopandas as gpd
-import numpy as np
-from shapely.geometry import Point
-import matplotlib as mpl
-# mpl.use('TkAgg')
-import matplotlib.pyplot as plt
-
-import operator
+from geol.feature_extraction.various import BOC
 import sys
-import getopt
+import argparse
+import os
 
 
 def category(df, level):
@@ -26,91 +20,39 @@ def category(df, level):
     else:
         return tmp[len(tmp) - 1]
 
-
 def main(argv):
 
-    try:
-        opts, args = getopt.getopt(
-            argv, "hm:l:o:", ["map=", "level=", "outputfile"])
+    parser = argparse.ArgumentParser('Generate BOC')
 
-    except getopt.GetoptError:
-        print ('script.py -m <map> -l <level> -o <outputfile>\n')
-        sys.exit(2)
+    parser.add_argument('-m', '--mapped_pois',
+                            help='Mapped POIs.',
+                            action='store',
+                            dest='pois_mapped',
+                            required='True',
+                            type=str)
 
-    for opt, arg in opts:
-        if opt == '-h':
-            print ('script.py -m <map> -l <level> -o <outputfile>\n')
-            sys.exit()
-        elif opt in ("-m", "--map"):
-            mapfile = arg
-        elif opt in ("-l", "--level"):
-            level_selection = int(arg)
-        elif opt in ("-o", "--outputfile"):
-            output = arg
+    parser.add_argument('-o', '--output',
+                        help='Output folder',
+                        action='store',
+                        dest='output',
+                        required='True',
+                        type=str)
 
-    # load foursquare dataset mapped on a particular grid
-    df = pd.read_csv(mapfile, sep='\t')
-    df['categories'] = df['categories'].astype(str)
+    parser.add_argument('-l', '--level',
+                            help='Level to which generate the BOC',
+                            action='store',
+                            dest='level',
+                            default=5,
+                            type=int)
 
-    # assign category to each record of the dataset
-    df["categ"] = df.apply(category, args=(level_selection,), axis=1)
-    # df.categories.apply(lambda x: x.split(":")[level_selection] if len(
-    #     x.split(":")) > level_selection else None)
+    args = parser.parse_args()
 
-    # drop entry with empty category
-    df = df.loc[df["categ"] != "nan"]
-    categories = df["categ"].drop_duplicates().values
+    input = os.path.abspath(args.pois_mapped)
+    output = os.path.abspath(args.output)
 
-    # compute the list of FS categories
-    POI = list(set(df['categ'].values))
-
-    print('df len: ' + str(len(df)))
-
-    # FOURSQUARE
-    # compute aggregation on 'cellID', summing inside the columns 'checkin'
-    # and 'usercount'
-    # cell_df = df[['checkin', 'usercount', 'cellID']].groupby(['cellID']).sum()
-    # OSM
-    # compute aggregation on 'cellID', summing inside the columns 'checkin'
-    # and 'usercount'
-    cell_df = df.groupby(['cellID']).sum()
-
-    cell_df.reset_index(inplace=True)
-
-    # compute aggregation on 'cellID' and 'categ' to count the number of each
-    # category in each cell
-    cat_df = pd.DataFrame(df.groupby(
-        ['cellID', 'categ']).size(), columns=['count'])
-    cat_df.reset_index(inplace=True)
-    #print('cat-df rows: ' + str(len(cat_df)))
-
-    # now, create a table with the same information of 'cat_df' but using
-    # categories names as columns names
-    r = pd.pivot_table(cat_df, values='count', index=[
-                       'cellID'], columns=['categ']).reset_index()
-
-    # fill empty cells
-    r[POI] = r[POI].fillna(0)
-
-    # cast to int of every value
-    r = r.astype(int)
-
-    # merge the two table in order to get one table with all the informations
-    df = cell_df.merge(r, on='cellID')
-
-    # FOURSQUARE
-    # sort columns
-    # df = df[POI + ['cellID', 'checkin', 'usercount']]
-    # OSM
-    # sort columns
-    df = df[POI + ['cellID']]
-
-    # sort rows by cell id
-    df.sort_values(by='cellID', inplace=True)
-
-    # write to file
-    df.to_csv(output, index=False)
-
+    pois = BOC.from_csv(input, level=args.level)
+    pois.generate()
+    pois.write(output)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
