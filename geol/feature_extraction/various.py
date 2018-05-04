@@ -108,7 +108,7 @@ class cell2vec(FeatureGenerator):
 
     def write(self, outfile):
 
-        cols = ["f_w2v_" + str(c) for c in self._features.columns if c is not 'cellID']
+        cols = ["f_w2v_" + str(c) if c is not "cellID" else c for c in self._features.columns]
         self._features.columns = cols
 
         return self._features.to_csv(outfile, index=True)

@@ -5,8 +5,8 @@
 # Load FourSquare MAPPED dataset and assign to each square in the grid the
 # number of POI of each FS category.
 
-import pandas as pd
-from geol.feature_extraction.various import BOC
+
+from geol.feature_extraction.various import cell2vec
 import sys
 import argparse
 import os
@@ -31,6 +31,13 @@ def main(argv):
                             required='True',
                             type=str)
 
+    parser.add_argument('-w', '--w2v_model',
+                        help='Word2Vec model.',
+                        action='store',
+                        dest='model',
+                        required='True',
+                        type=str)
+
     parser.add_argument('-o', '--output',
                         help='Output folder',
                         action='store',
@@ -48,9 +55,10 @@ def main(argv):
     args = parser.parse_args()
 
     input = os.path.abspath(args.pois_mapped)
+    model = os.path.abspath(args.model)
     output = os.path.abspath(args.output)
 
-    pois = BOC.from_csv(input, level=args.level)
+    pois = cell2vec.from_csv(input, model, binary=True, level=args.level)
     pois.generate()
     pois.write(output)
 

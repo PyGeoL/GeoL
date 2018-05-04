@@ -27,7 +27,7 @@ class FeatureGenerator:
     def write(self, outfile):
 
         # normalize columns name
-        cols = ['cellID'] + ["f_" + utils.normalize_word(c) for c in self._features.columns if c is not 'cellID']
+        cols = ["f_" + utils.normalize_word(c) if c is not 'cellID' else c for c in self._features.columns]
         self._features.columns = cols
 
         return self._features.to_csv(outfile, index=False)
