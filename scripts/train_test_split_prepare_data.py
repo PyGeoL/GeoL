@@ -223,10 +223,7 @@ def main(argv):
     args = parser.parse_args()
 
     # Merge Features and Targets
-    #merged_features_targets = merge_features_targets(args.features_path, args.targets_path, args.merge_strategy)
-
-    # Split and save the Train and Test datasets
-    split_train_test(merge_features_targets, args.features_path, args.targets_path, args.output_dir)
+    # merged_features_targets = merge_features_targets(args.features_path, args.targets_path, args.merge_strategy)
 
     # Load UA_mapped, POIs mapped and grid
     landuse_file = os.path.abspath(args.landuse)
