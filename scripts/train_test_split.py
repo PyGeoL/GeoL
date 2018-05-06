@@ -295,8 +295,8 @@ def main(argv):
     df_test = df_X_test.merge(df_y_test, left_index=True, right_index=True)
     df_train.to_csv(os.path.join(output_train, args.exp_name + ".csv"),
                     index_label="cellID", sep="\t", float_format='%.3f')
-    df_test.to_csv(os.path.join(output_test, args.exp_name + ".csv") +
-                   ".csv", index_label="cellID", sep="\t", float_format='%.3f')
+    df_test.to_csv(os.path.join(output_test, args.exp_name + ".csv"),
+                   index_label="cellID", sep="\t", float_format='%.3f')
 
 
 if __name__ == "__main__":
