@@ -21,8 +21,8 @@ from geol.geol_logger.geol_logger import logger
 
 def filter_landuse(df, threshold=0.25):
 
-    admitted_classes = ['Sports', 'HD', 'MD', 'LD',
-                        'Industrial', 'Green_Urban',  'Transport']
+    admitted_classes = ['Sports', 'HD', 'MD', 'LD', 'Industrial',
+                        'Green_Urban', 'Forests', 'Transport', 'Agri']
     df_valid = df.copy()
 
     # Filter out cell where predominant is more than 0.25 of total area in the cell
