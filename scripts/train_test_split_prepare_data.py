@@ -21,11 +21,13 @@ from geol.geol_logger.geol_logger import logger
 
 def filter_landuse(df, threshold=0.25):
 
-    admitted_classes = ['Sports', 'HD', 'MD', 'LD', 'Industrial', 'Green_Urban', 'Forests', 'Transport', 'Agri']
+    admitted_classes = ['Sports', 'HD', 'MD', 'LD', 'Industrial',
+                        'Green_Urban', 'Forests', 'Transport', 'Agri']
     df_valid = df.copy()
 
     # Filter out cell where predominant is more than 0.25 of total area in the cell
-    df_valid.loc[:, "valid"] = df_valid.apply(lambda x: 1 if x[x['predominant']] > 0.25 else 0, axis=1)
+    df_valid.loc[:, "valid"] = df_valid.apply(
+        lambda x: 1 if x[x['predominant']] > 0.25 else 0, axis=1)
 
     # Take only valid columns
     df_valid = df_valid[df_valid["valid"] != 0]
@@ -35,6 +37,7 @@ def filter_landuse(df, threshold=0.25):
     df_valid = df_valid[df_valid['predominant'].isin(admitted_classes)]
 
     return df_valid
+
 
 def filter_pois(df, threshold=1):
 
@@ -242,7 +245,8 @@ def main(argv):
         pois = filter_pois(pois, args.tpoi)
 
     # Merge and create a list of final admitted cells
-    admitted_cells = grid.merge(landuse[["cellID","predominant"]], on="cellID", how="inner").merge(pois, on="cellID")[["cellID"]]
+    admitted_cells = grid.merge(landuse[["cellID", "predominant"]], on="cellID", how="inner").merge(
+        pois, on="cellID")[["cellID"]]
 
     # Load features file
     dfs = []
@@ -256,8 +260,10 @@ def main(argv):
     df_all = admitted_cells.merge(features, on="cellID")
 
     # Split train/test taking into account the random seed to make reproducible the research
-    df_feat = df_all[[x for x in df_all.columns if x.startswith('f_')] + ['cellID']].set_index('cellID')
-    df_target = df_all[[x for x in df_all.columns if x.startswith('t_')] + ['cellID']].set_index('cellID')
+    df_feat = df_all[[x for x in df_all.columns if x.startswith(
+        'f_')] + ['cellID']].set_index('cellID')
+    df_target = df_all[[x for x in df_all.columns if x.startswith(
+        't_')] + ['cellID']].set_index('cellID')
 
     # Split Train and Test
     df_X_train, df_X_test, df_y_train, df_y_test = train_test_split(
@@ -269,14 +275,18 @@ def main(argv):
 
     # Prepare output directory path
     output_path = os.path.abspath(args.output_dir)
-    output_train = os.path.join(output_path, "train_" + features_path.split("/")[-1].split(".")[0])
-    output_test = os.path.join(output_path, "test_" + targets_path.split("/")[-1].split(".")[0])
+    output_train = os.path.join(
+        output_path, "train_" + features_path.split("/")[-1].split(".")[0])
+    output_test = os.path.join(
+        output_path, "test_" + targets_path.split("/")[-1].split(".")[0])
 
     # Save datasets
     df_train = df_X_train.merge(df_y_train, left_index=True, right_index=True)
     df_test = df_X_test.merge(df_y_test, left_index=True, right_index=True)
-    df_train.to_csv(output_train, index_label="cellID",sep="\t", float_format='%.6f')
-    df_test.to_csv(output_test, index_label="cellID",sep="\t", float_format='%.6f')
+    df_train.to_csv(output_train, index_label="cellID",
+                    sep="\t", float_format='%.6f')
+    df_test.to_csv(output_test, index_label="cellID",
+                   sep="\t", float_format='%.6f')
 
 
 if __name__ == "__main__":
