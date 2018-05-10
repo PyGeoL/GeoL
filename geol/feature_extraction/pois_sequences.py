@@ -76,7 +76,7 @@ class POISequences():
         else:
             None
 
-    def _distance(self, band_size=500):
+    def _distance(self, band_size=100):
 
         logger.info("Building sequences for each point in the sapce")
         wthresh = pysal.weights.DistanceBand.from_dataframe(self._pois, band_size, p=2, binary=False, ids=self._pois.index)
