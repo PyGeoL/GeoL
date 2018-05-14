@@ -10,10 +10,8 @@ from geol.utils import utils
 @six.add_metaclass(abc.ABCMeta)
 class FeatureGenerator:
 
-    def __init__(self, pois):
+    def __init__(self):
 
-        self._pois = pois
-        self._categories = pois["category"].drop_duplicates().values
         self._features = None
 
     @abc.abstractmethod

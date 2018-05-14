@@ -9,13 +9,16 @@ from geol.utils import utils
 import pandas as pd
 import gensim
 from geol.geol_logger.geol_logger import logger
-
+import pkg_resources
+import numpy as np
 
 class BOC(FeatureGenerator):
 
     def __init__(self, pois):
 
-        super(BOC, self).__init__(pois)
+        super(BOC, self).__init__()
+        self._pois = pois
+        self._categories = pois["category"].drop_duplicates().values
 
     @classmethod
     def from_csv(cls, input, sep='\t', category_column='categories', level=5):
@@ -70,8 +73,11 @@ class cell2vec(FeatureGenerator):
 
     def __init__(self, pois, w2v_model, binary=False):
 
-        super(cell2vec, self).__init__(pois)
+        super(cell2vec, self).__init__()
         logger.info("Loading w2v model")
+        self._pois = pois
+        self._categories = pois["category"].drop_duplicates().values
+
         self._model = gensim.models.KeyedVectors.load_word2vec_format(w2v_model, binary=binary)
 
     @classmethod
@@ -112,3 +118,58 @@ class cell2vec(FeatureGenerator):
         self._features.columns = cols
 
         return self._features.to_csv(outfile, index=True)
+
+class SPTKMatrix(FeatureGenerator):
+
+    def __init__(self):
+
+        super(SPTKMatrix, self).__init__()
+
+
+    def generate(self, model_path, binary=False, category_column='categories'):
+
+        model = gensim.models.KeyedVectors.load_word2vec_format(model_path, binary=binary)
+        size = model.vector_size
+
+        tree = pd.read_csv(pkg_resources.resource_filename(
+            'geol', '/resources/category_tree.csv'), encoding='iso-8859-1')
+
+        words = tree['level1_name'].dropna().drop_duplicates().tolist() + \
+                tree['level2_name'].dropna().drop_duplicates().tolist() + \
+                tree['level3_name'].dropna().drop_duplicates().tolist() + \
+                tree['level4_name'].dropna().drop_duplicates().tolist()
+
+        word_vectors = {}
+
+        for word in words:
+
+            word = utils.normalize_word(word)
+
+            w = word.split(' ')
+            v = [0] * int(size)
+
+            if len(w) > 1:
+                tmp_w2v = []
+                for e in w:
+                    if e in model:
+                        tmp_w2v.append(model[e])
+                if len(tmp_w2v) > 0:
+                    v = np.mean(tmp_w2v, axis=0)
+            elif word in model:
+                v = model[word]
+
+            word_vectors[word] = v
+
+        self._features = word_vectors
+
+    def write(self, outfile):
+
+        f = open(outfile, 'w')
+
+        for k,v in self._features.iteritems():
+
+            v = map(str, v)
+            s = ','.join(map(str, v))
+            f.write( (k.replace(" ", "_") + "::n" + "\t1.0\t0\t" + s + "\n").encode('utf8') )
+
+        f.close()

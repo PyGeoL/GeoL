@@ -74,8 +74,7 @@ def main(argv):
     ext = tuple([".biz", ".bin"])
 
     if(args.inputfile.endswith(ext)):
-        model = gensim.models.KeyedVectors.load_word2vec_format(
-            args.inputfile, binary=True)
+        model = gensim.models.KeyedVectors.load_word2vec_format(args.inputfile, binary=True)
     else:
         model = gensim.models.Word2Vec.load(args.inputfile)
 
