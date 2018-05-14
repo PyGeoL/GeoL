@@ -115,6 +115,7 @@ def main(argv):
 
 
     # ----- W2V params -----
+
     parser.add_argument('-cb', '--cbow',
                         action='store_true',
                         dest='cbow',
@@ -141,8 +142,8 @@ def main(argv):
                         nargs="+",
                         default=[5],
                         type=int)
-    # ----- end W2V params -----
 
+    # ----- end W2V params -----
 
     parser.add_argument('-m', '--multiprocessing',
                         help='Abilitate multiprocessing (strongly suggested when more CPUs are available)',

@@ -52,13 +52,19 @@ def main(argv):
                             default=5,
                             type=int)
 
+    parser.add_argument('-b', '--binary',
+                        help='True if the word2vec model has been saved in a binary mode.',
+                        dest='binary',
+                        action='store_true',
+                        default=False)
+
     args = parser.parse_args()
 
     input = os.path.abspath(args.pois_mapped)
     model = os.path.abspath(args.model)
     output = os.path.abspath(args.output)
 
-    pois = cell2vec.from_csv(input, model, binary=True, level=args.level)
+    pois = cell2vec.from_csv(input, model, binary=args.binary, level=args.level)
     pois.generate()
     pois.write(output)
 

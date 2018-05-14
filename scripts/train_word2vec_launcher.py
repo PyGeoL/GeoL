@@ -3,6 +3,7 @@ import os
 
 # Base directory
 BASE_DIR = os.path.abspath(".")
+
 # base directory for data files
 BASE_DIR_DATA = os.path.join(BASE_DIR, "data")
 
