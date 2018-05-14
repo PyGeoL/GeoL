@@ -32,7 +32,7 @@ def run_w2v_model(outputfolder, word_list, cbow, prefix, size, count, window, pl
         skip_gram = 0
 
     logger.info("Train w2v model - size: %s, min count: %s, window size: %s" % (size, count, window))
-    model = gensim.models.Word2Vec(word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=4)
+    model = gensim.models.KeyedVectors.Word2Vec(word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=4)
     model.save_word2vec_format(output)
 
     if plot:
