@@ -33,7 +33,7 @@ def run_w2v_model(outputfolder, word_list, cbow, prefix, size, count, window, pl
 
     logger.info("Train w2v model - size: %s, min count: %s, window size: %s" % (size, count, window))
     model = gensim.models.Word2Vec(word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=4)
-    model.save_word2vec_format(output)
+    model.wv.save_word2vec_format(output)
 
     if plot:
         tsne_plot(model, size, window, count, outputfolder, prefix)
@@ -197,7 +197,7 @@ def main(argv):
                         jobs.append(p)
                         p.start()
 
-                    else:
+                    #else:
                         #output = os.path.abspath(os.path.join(args.outputfolder,
                         #        args.prefix + '_s' + str(size) + '_ws'+str(window)+'_c'+str(count)+'.model'))
 
