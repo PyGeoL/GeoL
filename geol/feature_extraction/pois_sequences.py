@@ -12,7 +12,7 @@ import geopandas as gpd
 from shapely.ops import nearest_points
 from shapely.geometry import Point
 from geol.geometry.grid import Grid
-
+from random import shuffle
 
 class POISequences():
 
@@ -101,7 +101,7 @@ class POISequences():
 
         return obs
 
-    def distance_based_sequence(self, band_size, outfile):
+    def distance_based_sequence(self, band_size, outfile, outfile_shuffled=None):
 
         obs = self._distance(band_size)
 
@@ -125,10 +125,16 @@ class POISequences():
 
         # Fourth step - join the pois dataframe with the sequences and save into a csv
         logger.info("Save sequences")
-        self._pois[['categories', 'geometry']].merge(obs_3, left_index=True, right_on='observation')[
-            ['categories', 'geometry', 'complete']].to_csv(outfile.split(".csv")[0] + "_check.csv", sep='\t', index=False)
+
+        #self._pois[['categories', 'geometry']].merge(obs_3, left_index=True, right_on='observation')[
+        #    ['categories', 'geometry', 'complete']].to_csv(outfile.split(".csv")[0] + "_check.csv", sep='\t', index=False)
 
         obs_3[['complete']].to_csv(outfile, index=False, header=False)
+
+        if outfile is not None:
+            obs["complete_shuffled"] = obs_3["complete"].apply(lambda x: "\t".join(utils.shuffle(x.split(" "))))
+            obs[["complete_shuffled"]].to_csv(outfile_shuffled, index=False, header=False)
+
 
     def nearest_based_sequence(self, outfile, inputgrid):
 

@@ -80,7 +80,7 @@ def main(argv):
                         type=str)
 
     parser.add_argument('-s', '--strategy',
-                        help='Strategy to use: 1 (alphabetically, 2 (nearest), 3 (distance). Default 1.',
+                        help='Strategy to use: 1 (alphabetically, 2 (nearest), 3 (distance), 4 (distance + random_distance). Default 1.',
                         action='store',
                         dest='strategy',
                         default=1,
@@ -134,6 +134,17 @@ def main(argv):
         output = os.path.abspath(os.path.join(
             args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
         sequences_generator.distance_based_sequence(args.band_size, output)
+
+    elif (args.strategy == 4):
+        strStrategy = "distance"
+        output = os.path.abspath(os.path.join(
+            args.outputfolder, args.prefix + "_" + str(strStrategy) + ".txt"))
+
+        output_shuffled = os.path.abspath(os.path.join(
+            args.outputfolder, args.prefix + "_" + str("random_" + strStrategy) + ".txt"))
+
+        sequences_generator.distance_based_sequence(args.band_size, output, output_shuffled)
+
     else:
         raise ValueError("Please, check the parameters as no valid configurations have been found.")
 

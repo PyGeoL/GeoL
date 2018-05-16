@@ -15,6 +15,7 @@ import errno
 import re
 import numpy as np
 import pandas as pd
+from random import shuffle
 
 def get_area_boundary(area_name, which_result=1):
 
@@ -162,3 +163,9 @@ def get_embedding(df, model):
         d[i] = result[i]
 
     return pd.Series(d)
+
+def shuffle_list(a):
+
+    shuffle(a)
+
+    return a
