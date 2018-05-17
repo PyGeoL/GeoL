@@ -12,7 +12,9 @@ import geopandas as gpd
 from shapely.ops import nearest_points
 from shapely.geometry import Point
 from geol.geometry.grid import Grid
-from random import shuffle
+# from random import shuffle
+from geol.utils import shuffle_list
+
 
 class POISequences():
 
@@ -28,7 +30,8 @@ class POISequences():
         self._level = level
 
         if self._level is not None:
-            self._pois['categories'] = utils.select_category(list(self._pois['categories']), level)
+            self._pois['categories'] = utils.select_category(
+                list(self._pois['categories']), level)
 
     @classmethod
     def from_csv(cls, inputfile, sep='\t', crs=constants.default_crs, level=None):
@@ -45,7 +48,8 @@ class POISequences():
         # Create GeoDataFrame from the read DataFrame
         logger.info("Create GeoDataFrame")
         geometry = [Point(xy) for xy in zip(df.longitude, df.latitude)]
-        gdf = gpd.GeoDataFrame(df, index=df.index, geometry=geometry, crs={'init': crs})
+        gdf = gpd.GeoDataFrame(
+            df, index=df.index, geometry=geometry, crs={'init': crs})
 
         return cls(gdf.to_crs({'init': constants.universal_crs}))
 
@@ -79,7 +83,8 @@ class POISequences():
     def _distance(self, band_size=100):
 
         logger.info("Building sequences for each point in the sapce")
-        wthresh = pysal.weights.DistanceBand.from_dataframe(self._pois, band_size, p=2, binary=False, ids=self._pois.index)
+        wthresh = pysal.weights.DistanceBand.from_dataframe(
+            self._pois, band_size, p=2, binary=False, ids=self._pois.index)
 
         ds = []
         for index, indexes in wthresh.neighbors.items():
@@ -115,26 +120,29 @@ class POISequences():
 
         # Order by inverse of distance, which is not the real distance but the interaction value from PySal.
         # The interaction among points decreases as the distance increase.
-        obs_2.sort_values(by=['observation', 'distance'], ascending=False, inplace=True)
+        obs_2.sort_values(by=['observation', 'distance'],
+                          ascending=False, inplace=True)
 
         # Third step - build the sequence joining the words. We keep sequences with at least 3 words.
         obs_3 = obs_2.groupby(['observation', 'cat_observation']).apply(
             lambda x: '\t'.join(x['cat_observed']) if len(x) > 2 else None).reset_index().dropna().rename(
             columns={0: "sequence"})
-        obs_3.loc[:, "complete"] = obs_3['cat_observation'] + "\t" + obs_3['sequence']
+        obs_3.loc[:, "complete"] = obs_3['cat_observation'] + \
+            "\t" + obs_3['sequence']
 
         # Fourth step - join the pois dataframe with the sequences and save into a csv
         logger.info("Save sequences")
 
-        #self._pois[['categories', 'geometry']].merge(obs_3, left_index=True, right_on='observation')[
+        # self._pois[['categories', 'geometry']].merge(obs_3, left_index=True, right_on='observation')[
         #    ['categories', 'geometry', 'complete']].to_csv(outfile.split(".csv")[0] + "_check.csv", sep='\t', index=False)
 
         obs_3[['complete']].to_csv(outfile, index=False, header=False)
 
         if outfile is not None:
-            obs["complete_shuffled"] = obs_3["complete"].apply(lambda x: "\t".join(utils.shuffle(x.split(" "))))
-            obs[["complete_shuffled"]].to_csv(outfile_shuffled, index=False, header=False)
-
+            obs["complete_shuffled"] = obs_3["complete"].apply(
+                lambda x: "\t".join(utils.shuffle_list(x.split(" "))))
+            obs[["complete_shuffled"]].to_csv(
+                outfile_shuffled, index=False, header=False)
 
     def nearest_based_sequence(self, outfile, inputgrid):
 
@@ -155,7 +163,8 @@ class POISequences():
 
         logger.info("Save sequences")
         # ADD level model for writing
-        df.groupby('cellID').apply(self._nearest).dropna().to_csv(outfile, index=False, header=None)
+        df.groupby('cellID').apply(self._nearest).dropna().to_csv(
+            outfile, index=False, header=None)
 
     def alphabetically_sequence(self, outfile):
 
