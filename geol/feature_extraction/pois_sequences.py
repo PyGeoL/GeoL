@@ -13,7 +13,7 @@ from shapely.ops import nearest_points
 from shapely.geometry import Point
 from geol.geometry.grid import Grid
 # from random import shuffle
-from geol.utils import shuffle_list
+from geol.utils import utils
 
 
 class POISequences():
