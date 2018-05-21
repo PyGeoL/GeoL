@@ -140,7 +140,7 @@ class POISequences():
 
         if outfile is not None:
             obs["complete_shuffled"] = obs_3["complete"].apply(
-                lambda x: "\t".join(utils.shuffle_list(x.split(" "))))
+                lambda x: "\t".join(utils.shuffle_list(x.split("\t"))))
             obs[["complete_shuffled"]].to_csv(
                 outfile_shuffled, index=False, header=False)
 
