@@ -15,7 +15,6 @@ class Grid:
     def __init__(self, grid=None):
 
         self._grid = grid
-        self._crs = grid.crs
 
     @classmethod
     def from_file(cls, inputfile):

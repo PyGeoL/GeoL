@@ -20,11 +20,9 @@ def write_grid(output, size, window_size, crs, area_name, base_shape):
         grid = None
 
         if base_shape is not None:
-            grid = SquareGrid.from_file(
-                base_shape, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_file(base_shape, meters=size, window_size=window_size, grid_crs=crs)
         else:
-            grid = SquareGrid.from_name(
-                area_name, meters=size, window_size=window_size, grid_crs=crs)
+            grid = SquareGrid.from_name(area_name, meters=size, window_size=window_size, grid_crs=crs)
 
     except:
         logger.error("Error in creating tessellation " + output, exc_info=True)

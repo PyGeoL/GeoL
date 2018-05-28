@@ -17,7 +17,9 @@ class SquareGrid(Grid):
 
     def __init__(self, base_shape, meters=50, window_size=None, grid_crs=constants.default_crs):
 
-        super().__init__(crs=grid_crs)
+        super().__init__()
+
+        self._crs = grid_crs
 
         # Compute Bounding Box if requested
         if window_size is not None:
@@ -106,8 +108,7 @@ class SquareGrid(Grid):
         logger.debug("End creation of cells.")
 
         # Create the geoDataFrame and convert to the input crs.
-        gdf = gpd.GeoDataFrame(
-            polygons, crs={'init': constants.universal_crs, 'units': 'm'})
+        gdf = gpd.GeoDataFrame(polygons, crs={'init': constants.universal_crs, 'units': 'm'})
         self._grid = gdf.to_crs({'init': self._crs})
 
     @property
