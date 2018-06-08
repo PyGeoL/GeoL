@@ -279,7 +279,7 @@ def build_model_and_tune(tuning, params, X_train, y_train, seed, verbose=True):
     if verbose > 0:
         print('Tuning 3\tScore = ' + str(sc))
 
-    
+
     params['n_estimators'] = 177
 
     param_test4 = {
@@ -402,10 +402,10 @@ def main(argv):
     pred_path = os.path.join(args.directory_predictions, 'pred.dat')
 
     # Load TRAIN data
-    df_train = pd.read_csv(args.input_train, sep="\t", nrows=100)
+    df_train = pd.read_csv(args.input_train, sep="\t")
 
     # Load TEST data
-    df_test = pd.read_csv(args.input_test, sep="\t", nrows=100)
+    df_test = pd.read_csv(args.input_test, sep="\t")
 
     le = preprocessing.LabelEncoder()
     labels = le.fit(df_train["target"].values.ravel())
@@ -464,7 +464,8 @@ def main(argv):
     joblib.dump(model, model_path)
 
     # save predictions
-    pred_series = pd.Series(predictions)
+
+    pred_series = pd.Series(le.inverse_transform(predictions))
     pred_series.to_csv(pred_path,index=None, header=False)
 
     # print('\t\tTesting rmse = ')
