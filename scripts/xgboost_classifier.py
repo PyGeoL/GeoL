@@ -153,15 +153,8 @@ def modelfit(model, X, y, useTrainCV=True, cv_folds=5, early_stopping_rounds=50,
 
     if verbose:
 
-        # Predict training set:
-        predictions = model.predict(X)
-
-        # Print model report:
-        print("\n Model Report")
-        mse = metrics.mean_squared_error(y, predictions)
-        print("MSE error (Train): %f" % mse)
-        print("RMSE error (Train): %f" % math.sqrt(mse))
-
+        score, predictions = evaluate(model, X, y)
+        print("Score: %f" % score)
 
 def tune(X, y, param_test, verbose=0, learning_rate=0.1, n_estimators=140, max_depth=5, min_child_weight=1, gamma=0,
          subsample=0.8, colsample_bytree=0.8, scale_pos_weight=1, reg_alpha=0, seed=28, cv=5):
@@ -206,12 +199,12 @@ def evaluate(model, X_test, y_test):
 
     # transform back encoded labels to strings ,e.g.:"Industrial"
     predictions = model.predict(X_test)
-    return sklearn.metrics.f1_score(y_test.values, predictions, average="macro"), predictions
+    return sklearn.metrics.f1_score(y_test, predictions, average="macro"), predictions
 
 
-def train_test(params, X_train, y_train, X_test, y_test, seed, verbose=True):
+def train_test(params, X_train, y_train, X_test, y_test, seed, verbose=False):
 
-    num_class = len(y_train.drop_duplicates())
+    num_class = len(np.unique(y_train))
 
     model = XGBClassifier(objective='multi:softmax', num_class=num_class, seed=seed)
     model.set_params(**params)
@@ -228,7 +221,7 @@ def train_test(params, X_train, y_train, X_test, y_test, seed, verbose=True):
 
 
 # TUNING AND TESTING
-def build_model_and_tune(tuning, params, X_train, y_train, seed, verbose=1):
+def build_model_and_tune(tuning, params, X_train, y_train, seed, verbose=True):
 
     # Best score and update of the parameters
     def tune_and_update(param_test, parameters):
@@ -286,7 +279,7 @@ def build_model_and_tune(tuning, params, X_train, y_train, seed, verbose=1):
     if verbose > 0:
         print('Tuning 3\tScore = ' + str(sc))
 
-    """
+    
     params['n_estimators'] = 177
 
     param_test4 = {
@@ -351,7 +344,7 @@ def build_model_and_tune(tuning, params, X_train, y_train, seed, verbose=1):
 
     if verbose > 0:
         print('Tuning 9\tScore = ' + str(sc))
-    """
+
 
     return params, tuning
 
@@ -409,10 +402,10 @@ def main(argv):
     pred_path = os.path.join(args.directory_predictions, 'pred.dat')
 
     # Load TRAIN data
-    df_train = pd.read_csv(args.input_train, sep="\t")
+    df_train = pd.read_csv(args.input_train, sep="\t", nrows=100)
 
     # Load TEST data
-    df_test = pd.read_csv(args.input_test, sep="\t")
+    df_test = pd.read_csv(args.input_test, sep="\t", nrows=100)
 
     le = preprocessing.LabelEncoder()
     labels = le.fit(df_train["target"].values.ravel())
@@ -468,7 +461,7 @@ def main(argv):
     model, score, predictions = train_test(params, X_train, y_train, X_test, y_test, 27)
 
     # save_model(alg, args.directory_model)
-    #joblib.dump(alg, MODEL_PATH)
+    joblib.dump(model, model_path)
 
     # save predictions
     pred_series = pd.Series(predictions)
@@ -489,10 +482,10 @@ def main(argv):
     #M = data.max()
     #print('\t\tdata range = ' + str(M - m))
     #print('\t\tdata std = ' + str(std))
-    #print('\t\trmse/std = ' + str(f1_score/std))
-    #print('\t\trmse/range = ' + str(f1_score/(M - m)))
+    #print('\t\trmse/std = ' + str(score/std))
+    #print('\t\trmse/range = ' + str(score/(M - m)))
 
-    #test_res = (f1_score, std, M-m)
+    #test_res = (score, std, M-m)
 
     # feat_imp = pd.Series(alg.booster().get_fscore()).sort_values(ascending=False)
     # if feat_imp.shape[0] > 0:
