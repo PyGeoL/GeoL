@@ -137,13 +137,13 @@ class POISequences():
         #    ['categories', 'geometry', 'complete']].to_csv(outfile.split(".csv")[0] + "_check.csv", sep='\t', index=False)
 
         obs_3[['complete']].to_csv(
-            outfile, index=False, header=False, encoding="iso-8859-1")
+            outfile, index=False, header=False, encoding="utf-8")
 
         if outfile is not None:
             obs_3["complete_shuffled"] = obs_3["complete"].apply(
                 lambda x: "\t".join(utils.shuffle_list(x.split("\t"))))
             obs_3[["complete_shuffled"]].to_csv(
-                outfile_shuffled, index=False, header=False, encoding="iso-8859-1")
+                outfile_shuffled, index=False, header=False, encoding="utf-8")
 
     def nearest_based_sequence(self, outfile, inputgrid):
 
@@ -165,7 +165,7 @@ class POISequences():
         logger.info("Save sequences")
         # ADD level model for writing
         df.groupby('cellID').apply(self._nearest).dropna().to_csv(
-            outfile, index=False, header=None, encoding="iso-8859-1")
+            outfile, index=False, header=None, encoding="utf-8")
 
     def alphabetically_sequence(self, outfile):
 
@@ -177,4 +177,4 @@ class POISequences():
 
         # ADD level mode for writing
         self._pois.sort_values(by=["cellID", "categories"]).groupby('cellID')\
-            .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None, encoding="iso-8859-1")
+            .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None, encoding="utf-8")
