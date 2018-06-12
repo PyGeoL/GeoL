@@ -165,7 +165,7 @@ class POISequences():
         logger.info("Save sequences")
         # ADD level model for writing
         df.groupby('cellID').apply(self._nearest).dropna().to_csv(
-            outfile, index=False, header=None)
+            outfile, index=False, header=None, encoding="utf-8")
 
     def alphabetically_sequence(self, outfile):
 
@@ -177,4 +177,4 @@ class POISequences():
 
         # ADD level mode for writing
         self._pois.sort_values(by=["cellID", "categories"]).groupby('cellID')\
-            .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None)
+            .apply(lambda x: '\t'.join(x['categories']) if len(x) > 2 else None).dropna().to_csv(outfile, index=False, header=None, encoding="utf-8")
