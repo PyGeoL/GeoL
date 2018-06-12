@@ -175,8 +175,8 @@ def main(argv):
     # ------ pre-processing text ------
     logger.info("Preprocessing text")
     # Load data and normalize the text
-    with open(args.input, 'r', encoding="iso-8859-1") as input:
-        text = input.read().encode("utf-8")
+    with open(args.input, 'r', encoding="utf-8") as input:
+        text = input.read()
 
     # Split on new lines and remove empty lines
     labels_list = [x.split('\t') for x in list(filter(None, text.split('\n')))]
