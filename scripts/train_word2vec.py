@@ -175,7 +175,7 @@ def main(argv):
     # ------ pre-processing text ------
     logger.info("Preprocessing text")
     # Load data and normalize the text
-    with open(args.input, 'rb') as input:
+    with open(args.input, 'r') as input:
         text = input.read()
 
     # Split on new lines and remove empty lines
