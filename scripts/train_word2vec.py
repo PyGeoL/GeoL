@@ -31,12 +31,15 @@ def run_w2v_model(outputfolder, word_list, cbow, prefix, size, count, window, pl
     if cbow:
         skip_gram = 0
 
-    logger.info("Train w2v model - size: %s, min count: %s, window size: %s" % (size, count, window))
-    model = gensim.models.Word2Vec(word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=4)
+    logger.info("Train w2v model - size: %s, min count: %s, window size: %s" %
+                (size, count, window))
+    model = gensim.models.Word2Vec(
+        word_list, sg=skip_gram, size=size, min_count=count, window=window, workers=4)
     model.wv.save_word2vec_format(output, binary=False)
 
     if plot:
         tsne_plot(model, size, window, count, outputfolder, prefix)
+
 
 def tsne_plot(model, size, window, count, outputfolder, prefix):
     """
@@ -113,7 +116,6 @@ def main(argv):
                         default=5,
                         type=int)
 
-
     # ----- W2V params -----
 
     parser.add_argument('-cb', '--cbow',
@@ -173,8 +175,8 @@ def main(argv):
     # ------ pre-processing text ------
     logger.info("Preprocessing text")
     # Load data and normalize the text
-    with open(args.input, 'r') as input:
-            text = input.read()
+    with open(args.input, 'rb') as input:
+        text = input.read()
 
     # Split on new lines and remove empty lines
     labels_list = [x.split('\t') for x in list(filter(None, text.split('\n')))]
@@ -192,16 +194,17 @@ def main(argv):
                     if args.mp == True:
 
                         p = multiprocessing.Process(target=run_w2v_model,
-                            args=(args.outputfolder, word_list, args.cbow, args.prefix, size, count, window, args.plot))
+                                                    args=(args.outputfolder, word_list, args.cbow, args.prefix, size, count, window, args.plot))
 
                         jobs.append(p)
                         p.start()
 
-                    #else:
-                        #output = os.path.abspath(os.path.join(args.outputfolder,
+                    # else:
+                        # output = os.path.abspath(os.path.join(args.outputfolder,
                         #        args.prefix + '_s' + str(size) + '_ws'+str(window)+'_c'+str(count)+'.model'))
 
-                        run_w2v_model(args.outputfolder, word_list, args.cbow, args.prefix, size, count, window, args.plot)
+                        run_w2v_model(args.outputfolder, word_list, args.cbow,
+                                      args.prefix, size, count, window, args.plot)
 
                 except ValueError:
                     logger.error(
