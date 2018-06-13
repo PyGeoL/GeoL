@@ -179,7 +179,8 @@ def main(argv):
         text = input.read()
 
     # Split on new lines and remove empty lines
-    labels_list = [x.split('\t') for x in list(filter(None, text.split('\n')))]
+    labels_list = [x.split('\t') for x in list(
+        filter(None, text.encode('utf-8').decode('utf-8').split('\n')))]
 
     # Select the words based on the depth level
     word_list = pre_processing(labels_list, args.level)
